@@ -45,9 +45,9 @@
   },
   "devDependencies": {
     "@types/react": "catalog:",
-    "typescript": "catalog:",
     "eslint": "^9.25.0",
-    "eslint-config-expo": "~10.0.0"
+    "eslint-config-expo": "~10.0.0",
+    "typescript": "catalog:"
   },
   "private": true
 }

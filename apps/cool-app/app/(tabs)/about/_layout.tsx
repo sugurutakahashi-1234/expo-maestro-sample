@@ -1,25 +1,25 @@
 import { Stack } from "expo-router";
 
-export default function RootLayout() {
+export default function AboutLayout() {
   return (
     <Stack
       screenOptions={{
         headerBackTitle: "",
       }}
     >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
-        name="modal"
+        name="index"
         options={{
-          presentation: "modal",
-          title: "モーダル例"
+          title: "このアプリについて",
+          headerShown: true,
         }}
       />
       <Stack.Screen
-        name="license"
+        name="tech-details/[name]"
         options={{
+          title: "技術詳細",
           presentation: "card",
-          title: "ライセンス情報"
+          headerShown: true,
         }}
       />
     </Stack>
