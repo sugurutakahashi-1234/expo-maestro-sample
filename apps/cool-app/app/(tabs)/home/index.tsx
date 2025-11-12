@@ -55,8 +55,8 @@ export default function HomeScreen() {
           <Text style={styles.linkText}>プロフィール</Text>
         </Link>
 
-        <Link href="/modal" style={styles.link}>
-          <Text style={styles.linkText}>モーダルを開く</Text>
+        <Link href="/help" style={styles.link}>
+          <Text style={styles.linkText}>ヘルプを開く</Text>
         </Link>
       </View>
     </ScrollView>

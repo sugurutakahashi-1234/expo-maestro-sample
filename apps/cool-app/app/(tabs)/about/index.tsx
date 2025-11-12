@@ -51,10 +51,10 @@ export default function AboutScreen() {
 
         <Pressable
           style={[styles.button, styles.secondaryButton]}
-          onPress={() => router.push("/modal")}
+          onPress={() => router.push("/help")}
         >
           <Text style={[styles.buttonText, styles.secondaryButtonText]}>
-            モーダルを開く
+            ヘルプを開く
           </Text>
         </Pressable>
       </View>

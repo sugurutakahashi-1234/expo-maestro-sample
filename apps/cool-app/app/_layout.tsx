@@ -15,14 +15,14 @@ export default function RootLayout() {
         }}
       />
       <Stack.Screen
-        name="modal"
+        name="(modals)/help"
         options={{
           presentation: "modal",
-          title: "モーダル例"
+          title: "ヘルプ"
         }}
       />
       <Stack.Screen
-        name="license"
+        name="(screens)/license"
         options={{
           presentation: "card",
           title: "ライセンス情報"
