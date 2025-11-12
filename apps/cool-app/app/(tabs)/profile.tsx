@@ -64,6 +64,17 @@ export default function ProfileScreen() {
             <Text style={styles.arrow}>›</Text>
           </Pressable>
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>開発者向けデモ</Text>
+          <Pressable
+            style={styles.licenseButton}
+            onPress={() => router.push("/presentation-demo")}
+          >
+            <Text style={styles.licenseButtonText}>Presentation スタイル 🎭</Text>
+            <Text style={styles.arrow}>›</Text>
+          </Pressable>
+        </View>
       </View>
     </ScrollView>
   );

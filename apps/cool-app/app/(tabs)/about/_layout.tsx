@@ -4,7 +4,7 @@ export default function AboutLayout() {
   return (
     <Stack
       screenOptions={{
-        headerBackTitle: "",
+        headerBackButtonDisplayMode: "minimal",
       }}
     >
       <Stack.Screen
