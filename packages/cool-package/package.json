@@ -1,5 +1,27 @@
 {
+  "name": "cool-package",
+  "version": "0.0.1",
+  "private": true,
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "exports": {
+    ".": "./src/index.tsx"
+  },
+  "scripts": {
+    "test": "echo 'No tests configured for cool-package'",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'No linter configured for cool-package'",
+    "format": "echo 'No formatter configured for cool-package'",
+    "clean": "rm -rf node_modules",
+    "ci": "bun run typecheck && bun run lint && bun run test"
+  },
+  "dependencies": {
+    "react": "catalog:",
+    "react-native": "catalog:"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/react": "catalog:",
+    "typescript": "catalog:"
   }
 }

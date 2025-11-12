@@ -2,5 +2,27 @@
   "name": "monorepo",
   "private": true,
   "version": "0.0.0",
-  "workspaces": ["apps/*", "packages/*"]
+  "workspaces": {
+    "packages": ["apps/*", "packages/*"],
+    "catalog": {
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "react-native": "0.81.5",
+      "@types/react": "~19.1.0",
+      "typescript": "~5.9.2"
+    }
+  },
+  "scripts": {
+    "test": "bun run --filter '*' test",
+    "lint": "bun run --filter '*' lint",
+    "typecheck": "bun run --filter '*' typecheck",
+    "format": "bun run --filter '*' format",
+    "clean": "bun run --filter '*' clean && rm -rf node_modules",
+    "ci": "bun run typecheck && bun run lint && bun run test"
+  },
+  "resolutions": {
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-dom": "19.1.0"
+  }
 }

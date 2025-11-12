@@ -8,13 +8,19 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "test": "echo 'No tests configured for cool-app'",
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit",
+    "format": "echo 'No formatter configured for cool-app'",
+    "clean": "rm -rf node_modules .expo",
+    "ci": "bun run typecheck && bun run lint && bun run test"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
+    "cool-package": "*",
     "expo": "~54.0.23",
     "expo-constants": "~18.0.10",
     "expo-font": "~14.0.9",
@@ -27,9 +33,9 @@
     "expo-symbols": "~1.0.7",
     "expo-system-ui": "~6.0.8",
     "expo-web-browser": "~15.0.9",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-native": "0.81.5",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-native": "catalog:",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-worklets": "0.5.1",
     "react-native-reanimated": "~4.1.1",
@@ -38,8 +44,8 @@
     "react-native-web": "~0.21.0"
   },
   "devDependencies": {
-    "@types/react": "~19.1.0",
-    "typescript": "~5.9.2",
+    "@types/react": "catalog:",
+    "typescript": "catalog:",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0"
   },
