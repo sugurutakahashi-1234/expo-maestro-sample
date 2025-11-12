@@ -26,6 +26,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="transition"
+        options={{
+          title: "遷移",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="shuffle" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="about"
         options={{
           title: "このアプリについて",

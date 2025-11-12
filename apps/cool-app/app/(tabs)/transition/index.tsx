@@ -3,50 +3,50 @@ import { useRouter } from "expo-router";
 
 const PRESENTATION_STYLES = [
   {
-    route: "/sample-card",
+    route: "sample-card",
     name: "Card",
     description: "スタックにプッシュ。iOSでは横スライド、Androidではテーマに応じた動き。",
     platform: "iOS / Android",
   },
   {
-    route: "/sample-modal",
+    route: "sample-modal",
     name: "Modal",
     description: "モーダル表示。下から上にスライドアップ。ネストされたスタックも可能。",
     platform: "iOS / Android",
   },
   {
-    route: "/sample-transparent-modal",
+    route: "sample-transparent-modal",
     name: "Transparent Modal",
     description: "透明なモーダル。前の画面が背景として見える。",
     platform: "iOS / Android",
   },
   {
-    route: "/sample-contained-modal",
+    route: "sample-contained-modal",
     name: "Contained Modal",
     description: "UIModalPresentationCurrentContext（iOS）。Androidではmodalにフォールバック。",
     platform: "iOS / Android",
   },
   {
-    route: "/sample-contained-transparent-modal",
+    route: "sample-contained-transparent-modal",
     name: "Contained Transparent Modal",
     description: "UIModalPresentationOverCurrentContext（iOS）。Androidではtransparent modalにフォールバック。",
     platform: "iOS / Android",
   },
   {
-    route: "/sample-fullscreen-modal",
+    route: "sample-fullscreen-modal",
     name: "Full Screen Modal",
     description: "UIModalPresentationFullScreen（iOS）。Androidではmodalにフォールバック。",
     platform: "iOS / Android",
   },
   {
-    route: "/sample-formsheet",
+    route: "sample-formsheet",
     name: "Form Sheet",
     description: "UIModalPresentationFormSheet（iOS）。iPadではシート表示。Androidではmodalにフォールバック。",
     platform: "iOS / Android",
   },
 ];
 
-export default function PresentationDemoScreen() {
+export default function TransitionDemoScreen() {
   const router = useRouter();
 
   return (
@@ -75,7 +75,7 @@ export default function PresentationDemoScreen() {
             <Pressable
               key={style.route}
               style={styles.styleCard}
-              onPress={() => router.push(style.route as any)}
+              onPress={() => router.push(`/transition/${style.route}` as any)}
             >
               <View style={styles.styleContent}>
                 <View style={styles.styleHeader}>
