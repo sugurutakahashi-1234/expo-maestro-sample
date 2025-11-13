@@ -1,7 +1,26 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:stackoverflow.com)"
+      "WebFetch(domain:stackoverflow.com)",
+      "WebFetch(domain:code.visualstudio.com)",
+      "WebFetch(domain:mise.jdx.dev)",
+      "WebFetch(domain:sdkman.io)",
+      "WebFetch(domain:betterstack.com)",
+      "Bash(ruby -v:*)",
+      "Bash(java -version:*)",
+      "Bash(mise use:*)",
+      "Bash(source ~/.zshrc)",
+      "Bash(mise list:*)",
+      "Bash(mise doctor:*)",
+      "WebFetch(domain:dev.to)",
+      "Bash(mise install:*)",
+      "Bash(mise uninstall:*)",
+      "Bash(ruby:*)",
+      "Bash(java:*)",
+      "Bash(mise activate:*)",
+      "Bash(zsh -c:*)",
+      "Bash(zsh -l -c 'which node && node --version')",
+      "Bash(mise env:*)"
     ],
     "deny": [],
     "ask": []
