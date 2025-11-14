@@ -20,7 +20,18 @@
       "Bash(mise activate:*)",
       "Bash(zsh -c:*)",
       "Bash(zsh -l -c 'which node && node --version')",
-      "Bash(mise env:*)"
+      "Bash(mise env:*)",
+      "Bash(mise registry:*)",
+      "Bash(mise ls-remote:*)",
+      "Bash(mise --help:*)",
+      "Bash(mise ls:*)",
+      "WebFetch(domain:atske.com)",
+      "WebFetch(domain:formulae.brew.sh)",
+      "WebFetch(domain:www.stuartellis.name)",
+      "Bash(mise --version:*)",
+      "Bash(brew leaves:*)",
+      "Bash(brew deps:*)",
+      "Bash(brew uses:*)"
     ],
     "deny": [],
     "ask": []
