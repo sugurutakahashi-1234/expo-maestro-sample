@@ -31,7 +31,13 @@
       "Bash(mise --version:*)",
       "Bash(brew leaves:*)",
       "Bash(brew deps:*)",
-      "Bash(brew uses:*)"
+      "Bash(brew uses:*)",
+      "Bash(eas:*)",
+      "Bash(mise exec:*)",
+      "WebFetch(domain:aquaproj.github.io)",
+      "WebFetch(domain:npmtrends.com)",
+      "WebFetch(domain:eza.rocks)",
+      "WebFetch(domain:www.linux-magazine.com)"
     ],
     "deny": [],
     "ask": []
