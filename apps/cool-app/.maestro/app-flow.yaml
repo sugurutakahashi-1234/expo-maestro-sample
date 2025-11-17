@@ -41,6 +41,22 @@ appId: com.sugurutakahashi.coolapp
 #    - 正しくは: - runFlow: { when: { platform: ios }, commands: [- takeScreenshot: xxx] }
 #    - 参考: https://docs.maestro.dev/advanced/conditions
 #
+# 7. Maestro CLIの並列実行不可
+#    - 複数のMaestro CLIインスタンスを同時実行できない
+#    - すべてのインスタンスがポート7001を使用するため競合する
+#    - iOSとAndroidのテストを並行実行(concurrently等)しようとするとエラーが発生
+#    - エラー例: "java.io.IOException: Command failed (tcp:7001): closed"
+#    - 対策: 順次実行（&&）を使用する
+#    - 例: "bun run maestro:ios && bun run maestro:android"
+#
+# 8. VRT (Visual Regression Testing) のためのステータスバー固定
+#    - スクリーンショット比較時に時刻やバッテリー残量の差異を防ぐため、
+#      ステータスバーを固定値にオーバライドする
+#    - iOS: xcrun simctl status_bar コマンドで固定（9:41, バッテリー100%等）
+#    - Android: adb Demo Modeで固定（9:41, バッテリー100%等）
+#    - package.jsonの statusbar:ios と statusbar:android スクリプトで自動設定
+#    - maestro:ios と maestro:android 実行時に自動で適用される
+#
 # ==========================================
 
 - launchApp:
