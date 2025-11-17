@@ -47,7 +47,8 @@
       "WebFetch(domain:maestro.mobile.dev)",
       "Bash(adb devices:*)",
       "Bash(adb shell pm list packages:*)",
-      "Bash(adb shell:*)"
+      "Bash(adb shell:*)",
+      "Bash(maestro test --help:*)"
     ],
     "deny": [],
     "ask": []

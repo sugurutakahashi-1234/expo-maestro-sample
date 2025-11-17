@@ -1,5 +1,6 @@
 appId: com.sugurutakahashi.coolapp
 ---
+
 - launchApp:
     appId: "com.sugurutakahashi.coolapp"
     clearState: true
