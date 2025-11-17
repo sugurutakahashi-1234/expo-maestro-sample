@@ -90,6 +90,6 @@ appId: com.sugurutakahashi.coolapp
 - scrollUntilVisible:
     element:
         text: "Expo モノレポ with Bun"
-    direction: TOP
+    direction: UP
     timeout: 10000
 - assertVisible: "Expo モノレポ with Bun"
