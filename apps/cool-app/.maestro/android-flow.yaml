@@ -1,8 +1,8 @@
 appId: com.sugurutakahashi.coolapp
 ---
-- launchApp:
-    appId: "com.sugurutakahashi.coolapp"
-    clearState: true
+# - launchApp:
+#     appId: "com.sugurutakahashi.coolapp"
+#     clearState: true
 
 # ホーム画面の確認
 - assertVisible: "Expo モノレポ with Bun"
