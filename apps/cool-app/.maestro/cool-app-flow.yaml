@@ -1,0 +1,84 @@
+appId: com.sugurutakahashi.coolapp
+---
+- launchApp
+
+# ホーム画面の確認
+- assertVisible: "Expo モノレポ with Bun"
+- assertVisible: "📚 記事リスト"
+- takeScreenshot: home-tab
+
+# 記事リストの確認と詳細画面への遷移
+- assertVisible: "Expo Routerの始め方"
+- tapOn: "Expo Routerの始め方"
+- assertVisible: "記事詳細"
+- assertVisible: "チュートリアル"
+
+# 戻る
+- back
+
+# タブナビゲーションのテスト - 遷移タブ
+- tapOn: "遷移"
+- assertVisible: "画面遷移デモ"
+- takeScreenshot: transition-tab
+
+# タブナビゲーションのテスト - このアプリについて
+- tapOn: "このアプリについて"
+- assertVisible: "このアプリについての説明"
+- takeScreenshot: about-tab
+
+# タブナビゲーションのテスト - プロフィール
+- tapOn: "プロフィール"
+- assertVisible: "ユーザー情報"
+- takeScreenshot: profile-tab
+# ホームに戻る
+- tapOn: "ホーム"
+- assertVisible: "📚 記事リスト"
+
+# ログインデモボタンまでスクロール
+- scrollUntilVisible:
+    element:
+      text: "ログインデモ (Maestroテスト用)"
+    direction: DOWN
+    timeout: 10000
+
+# ログイン画面のテキスト入力テスト
+- tapOn: "ログインデモ (Maestroテスト用)"
+- assertVisible: "ログイン"
+- assertVisible: "Maestroテキスト入力デモ"
+
+# メールアドレス入力
+- tapOn:
+    id: "email-input"
+- inputText: "test@example.com"
+- assertVisible:
+    id: "email-display"
+    text: "test@example.com"
+
+# パスワード入力
+- tapOn:
+    id: "password-input"
+- inputText: "password123"
+
+# 入力値の確認（パスワードはマスクされているはず）
+- assertVisible:
+    id: "password-display"
+
+# 入力完了後のスクリーンショット
+- takeScreenshot: login-form-filled
+
+# ログインボタンをタップ
+- tapOn:
+    id: "login-button"
+
+# アラートが表示されることを確認
+- assertVisible: "ログイン成功"
+
+# ログイン成功のスクリーンショット
+- takeScreenshot: login-success
+
+# アラートを閉じる
+- tapOn: "OK"
+
+# ホームに戻ったことを確認
+- assertVisible: "📚 記事リスト"
+

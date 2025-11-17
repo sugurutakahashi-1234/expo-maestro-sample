@@ -1,0 +1,4 @@
+testOutputDir: .maestro/ios
+platform:
+  ios:
+    disableAnimations: true

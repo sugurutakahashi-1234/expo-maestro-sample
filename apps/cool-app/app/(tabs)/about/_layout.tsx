@@ -10,7 +10,7 @@ export default function AboutLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: "このアプリについて",
+          title: "このアプリについての説明",
           headerShown: true,
         }}
       />

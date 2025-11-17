@@ -58,6 +58,10 @@ export default function HomeScreen() {
         <Link href="/help" style={styles.link}>
           <Text style={styles.linkText}>ヘルプを開く</Text>
         </Link>
+
+        <Link href="/login" style={styles.link}>
+          <Text style={styles.linkText}>ログインデモ (Maestroテスト用)</Text>
+        </Link>
       </View>
     </ScrollView>
   );

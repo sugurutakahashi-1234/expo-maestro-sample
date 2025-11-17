@@ -41,7 +41,11 @@
       "WebFetch(domain:docs.maestro.dev)",
       "Bash(maestro --version:*)",
       "Bash(~/.local/share/mise/installs/java/temurin-21.0.9+10.0.LTS/bin/java:*)",
-      "Bash(~/.local/share/mise/installs/maestro/cli-2.0.10/bin/maestro:*)"
+      "Bash(~/.local/share/mise/installs/maestro/cli-2.0.10/bin/maestro:*)",
+      "Bash(xcrun simctl list:*)",
+      "Bash(xcrun simctl:*)",
+      "WebFetch(domain:maestro.mobile.dev)",
+      "Bash(adb devices:*)"
     ],
     "deny": [],
     "ask": []
