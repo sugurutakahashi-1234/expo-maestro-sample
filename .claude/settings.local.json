@@ -49,7 +49,9 @@
       "Bash(adb shell pm list packages:*)",
       "Bash(adb shell:*)",
       "Bash(maestro test --help:*)",
-      "WebFetch(domain:ttpho.github.io)"
+      "WebFetch(domain:ttpho.github.io)",
+      "Bash(maestro test:*)",
+      "Bash(maestro --help:*)"
     ],
     "deny": [],
     "ask": []
