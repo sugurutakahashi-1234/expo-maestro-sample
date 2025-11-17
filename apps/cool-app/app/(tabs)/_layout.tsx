@@ -20,6 +20,7 @@ export default function TabLayout() {
         name="home"
         options={{
           title: "ホーム",
+          tabBarAccessibilityLabel: "ホーム",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
@@ -29,6 +30,7 @@ export default function TabLayout() {
         name="transition"
         options={{
           title: "遷移",
+          tabBarAccessibilityLabel: "遷移",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="shuffle" size={size} color={color} />
           ),
@@ -38,6 +40,7 @@ export default function TabLayout() {
         name="about"
         options={{
           title: "このアプリについて",
+          tabBarAccessibilityLabel: "このアプリについて",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="information-circle" size={size} color={color} />
           ),
@@ -47,6 +50,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "プロフィール",
+          tabBarAccessibilityLabel: "プロフィール",
           headerShown: true,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />

@@ -1,6 +1,8 @@
 appId: com.sugurutakahashi.coolapp
 ---
-- launchApp
+- launchApp:
+    appId: "com.sugurutakahashi.coolapp"
+    clearState: true
 
 # ホーム画面の確認
 - assertVisible: "Expo モノレポ with Bun"
@@ -14,7 +16,7 @@ appId: com.sugurutakahashi.coolapp
 - assertVisible: "チュートリアル"
 
 # 戻る
-- back
+- tapOn: 記事一覧
 
 # タブナビゲーションのテスト - 遷移タブ
 - tapOn: "遷移"

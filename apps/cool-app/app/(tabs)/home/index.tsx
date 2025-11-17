@@ -29,6 +29,7 @@ export default function HomeScreen() {
         {ARTICLES.map((article) => (
           <Pressable
             key={article.id}
+            accessibilityLabel={article.title}
             style={styles.articleCard}
             onPress={() => router.push({
               pathname: "/home/article/[id]",
