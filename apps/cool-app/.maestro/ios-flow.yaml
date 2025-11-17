@@ -50,6 +50,7 @@ appId: com.sugurutakahashi.coolapp
 - tapOn:
     id: "email-input"
 - inputText: "test@example.com"
+- hideKeyboard
 - assertVisible:
     id: "email-display"
     text: "test@example.com"
@@ -58,6 +59,7 @@ appId: com.sugurutakahashi.coolapp
 - tapOn:
     id: "password-input"
 - inputText: "password123"
+- hideKeyboard
 
 # 入力値の確認（パスワードはマスクされているはず）
 - assertVisible:
