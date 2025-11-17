@@ -1,5 +1,9 @@
 appId: com.sugurutakahashi.coolapp
 ---
+# NOTE: runFlow内でのtakeScreenshot使用時の注意点
+# runFlowのcommands内でtakeScreenshotを使う場合、
+# デフォルトの.maestro/screenshots/パスが自動適用されないため、
+# 明示的に".maestro/screenshots/android/xxx"のような完全なパスを指定する必要があります。
 
 - launchApp:
     appId: "com.sugurutakahashi.coolapp"
@@ -12,12 +16,12 @@ appId: com.sugurutakahashi.coolapp
     when:
       platform: android
     commands:
-      - takeScreenshot: android-home-tab
+      - takeScreenshot: .maestro/screenshots/android/home-tab
 - runFlow:
     when:
       platform: ios
     commands:
-      - takeScreenshot: ios-home-tab
+      - takeScreenshot: .maestro/screenshots/ios/home-tab
 
 # 記事リストの確認と詳細画面への遷移
 - assertVisible: "Expo Routerの始め方"
@@ -44,12 +48,12 @@ appId: com.sugurutakahashi.coolapp
     when:
       platform: android
     commands:
-      - takeScreenshot: android-transition-tab
+      - takeScreenshot: .maestro/screenshots/android/transition-tab
 - runFlow:
     when:
       platform: ios
     commands:
-      - takeScreenshot: ios-transition-tab
+      - takeScreenshot: .maestro/screenshots/ios/transition-tab
 
 # タブナビゲーションのテスト - このアプリについて
 - tapOn: "このアプリについて"
@@ -58,12 +62,12 @@ appId: com.sugurutakahashi.coolapp
     when:
       platform: android
     commands:
-      - takeScreenshot: android-about-tab
+      - takeScreenshot: .maestro/screenshots/android/about-tab
 - runFlow:
     when:
       platform: ios
     commands:
-      - takeScreenshot: ios-about-tab
+      - takeScreenshot: .maestro/screenshots/ios/about-tab
 
 # タブナビゲーションのテスト - プロフィール
 - tapOn: "プロフィール"
@@ -72,12 +76,12 @@ appId: com.sugurutakahashi.coolapp
     when:
       platform: android
     commands:
-      - takeScreenshot: android-profile-tab
+      - takeScreenshot: .maestro/screenshots/android/profile-tab
 - runFlow:
     when:
       platform: ios
     commands:
-      - takeScreenshot: ios-profile-tab
+      - takeScreenshot: .maestro/screenshots/ios/profile-tab
 # ホームに戻る
 - tapOn: "ホーム"
 - assertVisible: "📚 記事リスト"
@@ -118,12 +122,12 @@ appId: com.sugurutakahashi.coolapp
     when:
       platform: android
     commands:
-      - takeScreenshot: android-login-form-filled
+      - takeScreenshot: .maestro/screenshots/android/login-form-filled
 - runFlow:
     when:
       platform: ios
     commands:
-      - takeScreenshot: ios-login-form-filled
+      - takeScreenshot: .maestro/screenshots/ios/login-form-filled
 
 # ログインボタンをタップ
 - tapOn:
@@ -137,12 +141,12 @@ appId: com.sugurutakahashi.coolapp
     when:
       platform: android
     commands:
-      - takeScreenshot: android-login-success
+      - takeScreenshot: .maestro/screenshots/android/login-success
 - runFlow:
     when:
       platform: ios
     commands:
-      - takeScreenshot: ios-login-success
+      - takeScreenshot: .maestro/screenshots/ios/login-success
 
 # アラートを閉じる
 - tapOn: "OK"
