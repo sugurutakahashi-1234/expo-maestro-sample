@@ -39,7 +39,7 @@ appId: com.sugurutakahashi.coolapp
 # ログインデモボタンまでスクロール
 - scrollUntilVisible:
     element:
-      text: "ログインデモ (Maestroテスト用)"
+        text: "ログインデモ (Maestroテスト用)"
     direction: DOWN
     timeout: 10000
 
@@ -85,3 +85,11 @@ appId: com.sugurutakahashi.coolapp
 
 # ホームに戻ったことを確認
 - assertVisible: "📚 記事リスト"
+
+# 一番上までスクロールして確認
+- scrollUntilVisible:
+    element:
+        text: "Expo モノレポ with Bun"
+    direction: TOP
+    timeout: 10000
+- assertVisible: "Expo モノレポ with Bun"
