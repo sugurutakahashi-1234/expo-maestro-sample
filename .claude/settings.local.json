@@ -45,7 +45,9 @@
       "Bash(xcrun simctl list:*)",
       "Bash(xcrun simctl:*)",
       "WebFetch(domain:maestro.mobile.dev)",
-      "Bash(adb devices:*)"
+      "Bash(adb devices:*)",
+      "Bash(adb shell pm list packages:*)",
+      "Bash(adb shell:*)"
     ],
     "deny": [],
     "ask": []

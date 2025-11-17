@@ -1,4 +1,0 @@
-testOutputDir: .maestro/android
-platform:
-  android:
-    disableAnimations: true
