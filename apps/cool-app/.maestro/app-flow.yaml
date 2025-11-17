@@ -8,7 +8,16 @@ appId: com.sugurutakahashi.coolapp
 # ホーム画面の確認
 - assertVisible: "Expo モノレポ with Bun"
 - assertVisible: "📚 記事リスト"
-- takeScreenshot: ios/home-tab
+- runFlow:
+    when:
+      platform: android
+    commands:
+      - takeScreenshot: android-home-tab
+- runFlow:
+    when:
+      platform: ios
+    commands:
+      - takeScreenshot: ios-home-tab
 
 # 記事リストの確認と詳細画面への遷移
 - assertVisible: "Expo Routerの始め方"
@@ -17,22 +26,58 @@ appId: com.sugurutakahashi.coolapp
 - assertVisible: "チュートリアル"
 
 # 戻る
-- tapOn: 記事一覧
+- runFlow:
+    when:
+      platform: android
+    commands:
+      - tapOn: Navigate up
+- runFlow:
+    when:
+      platform: ios
+    commands:
+      - tapOn: 記事一覧
 
 # タブナビゲーションのテスト - 遷移タブ
 - tapOn: "遷移"
 - assertVisible: "画面遷移デモ"
-- takeScreenshot: ios/transition-tab
+- runFlow:
+    when:
+      platform: android
+    commands:
+      - takeScreenshot: android-transition-tab
+- runFlow:
+    when:
+      platform: ios
+    commands:
+      - takeScreenshot: ios-transition-tab
 
 # タブナビゲーションのテスト - このアプリについて
 - tapOn: "このアプリについて"
 - assertVisible: "このアプリについての説明"
-- takeScreenshot: ios/about-tab
+- runFlow:
+    when:
+      platform: android
+    commands:
+      - takeScreenshot: android-about-tab
+- runFlow:
+    when:
+      platform: ios
+    commands:
+      - takeScreenshot: ios-about-tab
 
 # タブナビゲーションのテスト - プロフィール
 - tapOn: "プロフィール"
 - assertVisible: "ユーザー情報"
-- takeScreenshot: ios/profile-tab
+- runFlow:
+    when:
+      platform: android
+    commands:
+      - takeScreenshot: android-profile-tab
+- runFlow:
+    when:
+      platform: ios
+    commands:
+      - takeScreenshot: ios-profile-tab
 # ホームに戻る
 - tapOn: "ホーム"
 - assertVisible: "📚 記事リスト"
@@ -69,7 +114,16 @@ appId: com.sugurutakahashi.coolapp
     id: "password-display"
 
 # 入力完了後のスクリーンショット
-- takeScreenshot: ios/login-form-filled
+- runFlow:
+    when:
+      platform: android
+    commands:
+      - takeScreenshot: android-login-form-filled
+- runFlow:
+    when:
+      platform: ios
+    commands:
+      - takeScreenshot: ios-login-form-filled
 
 # ログインボタンをタップ
 - tapOn:
@@ -79,7 +133,16 @@ appId: com.sugurutakahashi.coolapp
 - assertVisible: "ログイン成功"
 
 # ログイン成功のスクリーンショット
-- takeScreenshot: ios/login-success
+- runFlow:
+    when:
+      platform: android
+    commands:
+      - takeScreenshot: android-login-success
+- runFlow:
+    when:
+      platform: ios
+    commands:
+      - takeScreenshot: ios-login-success
 
 # アラートを閉じる
 - tapOn: "OK"
