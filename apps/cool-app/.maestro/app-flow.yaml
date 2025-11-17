@@ -1,9 +1,49 @@
 appId: com.sugurutakahashi.coolapp
 ---
-# NOTE: runFlow内でのtakeScreenshot使用時の注意点
-# runFlowのcommands内でtakeScreenshotを使う場合、
-# デフォルトの.maestro/screenshots/パスが自動適用されないため、
-# 明示的に".maestro/screenshots/android/xxx"のような完全なパスを指定する必要があります。
+# ==========================================
+# Maestro テスト実装時のハマりポイント集
+# ==========================================
+#
+# 1. Maestro StudioとCLIの同時使用不可（最重要！）
+#    - Maestro Studioが起動していると、CLIでlaunchAppが機能しない
+#    - ポート7001の競合が原因（両者が同じポートを使用）
+#    - 対策: CLIテスト実行時は必ずMaestro Studioを終了する
+#    - 参考: https://github.com/mobile-dev-inc/maestro/issues/1927
+#
+# 2. iOSでのaccessibilityLabel必須
+#    - iOSではaccessibilityLabelを設定しないとMaestroが要素を認識できない
+#    - 特にタブナビゲーションやボタンなどインタラクティブな要素で必須
+#    - React NativeのaccessibilityLabel属性を使用して設定する
+#    - 参考: https://reactnative.dev/docs/accessibility#accessibilitylabel
+#    - 参考: https://docs.maestro.dev/platform-support/ios-uikit
+#
+# 3. iOSの物理デバイスは非対応
+#    - Maestroは現時点でiOSの物理デバイスをサポートしていない
+#    - iOSテストはシミュレータのみで実行可能
+#    - Androidは物理デバイスでもテスト可能
+#    - 参考: https://docs.maestro.dev/getting-started/installing-maestro#connecting-to-your-device
+#
+# 4. runFlow内でのtakeScreenshot使用時の注意
+#    - runFlowのcommands内でtakeScreenshotを使う場合、
+#      デフォルトの.maestro/screenshots/パスが自動適用されない
+#    - 明示的に".maestro/screenshots/android/xxx"のような完全パスを指定する必要がある
+#
+# 5. CLIとStudioでのパス解釈の違い
+#    - CLI: プロジェクトルートから見たパスとして解釈
+#      → ".maestro/screenshots/ios/home-tab.png" として保存
+#    - Studio: .maestroフォルダをカレントディレクトリとして実行
+#      → ".maestro/screenshots/.maestro/screenshots/ios/home-tab.png" となる（二重パス）
+#    - この問題を回避するため、CLI実行を推奨
+#
+# 6. when条件はrunFlowとrunScriptでのみ使用可能
+#    - プラットフォーム分岐（when: platform: android/ios）を使いたい場合、
+#      必ずrunFlowまたはrunScriptで囲む必要がある
+#    - takeScreenshot、tapOn、assertVisibleなどの通常コマンドに直接whenは使えない
+#    - 例: - takeScreenshot: xxx に when: platform: ios は付けられない
+#    - 正しくは: - runFlow: { when: { platform: ios }, commands: [- takeScreenshot: xxx] }
+#    - 参考: https://docs.maestro.dev/advanced/conditions
+#
+# ==========================================
 
 - launchApp:
     appId: "com.sugurutakahashi.coolapp"
