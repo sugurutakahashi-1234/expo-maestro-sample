@@ -49,19 +49,13 @@ appId: com.sugurutakahashi.coolapp
     appId: "com.sugurutakahashi.coolapp"
     clearState: true
 
+# maestro.platformを使用したプラットフォーム判定（最初に1回だけ実行）
+- evalScript: ${output.platform = maestro.platform}
+
 # ホーム画面の確認
 - assertVisible: "Expo モノレポ with Bun"
 - assertVisible: "📚 記事リスト"
-- runFlow:
-    when:
-      platform: android
-    commands:
-      - takeScreenshot: .maestro/screenshots/android/home-tab
-- runFlow:
-    when:
-      platform: ios
-    commands:
-      - takeScreenshot: .maestro/screenshots/ios/home-tab
+- takeScreenshot: .maestro/screenshots/${output.platform}/home-tab
 
 # 記事リストの確認と詳細画面への遷移
 - assertVisible: "Expo Routerの始め方"
@@ -84,44 +78,17 @@ appId: com.sugurutakahashi.coolapp
 # タブナビゲーションのテスト - 遷移タブ
 - tapOn: "遷移"
 - assertVisible: "画面遷移デモ"
-- runFlow:
-    when:
-      platform: android
-    commands:
-      - takeScreenshot: .maestro/screenshots/android/transition-tab
-- runFlow:
-    when:
-      platform: ios
-    commands:
-      - takeScreenshot: .maestro/screenshots/ios/transition-tab
+- takeScreenshot: .maestro/screenshots/${output.platform}/transition-tab
 
 # タブナビゲーションのテスト - このアプリについて
 - tapOn: "このアプリについて"
 - assertVisible: "このアプリについての説明"
-- runFlow:
-    when:
-      platform: android
-    commands:
-      - takeScreenshot: .maestro/screenshots/android/about-tab
-- runFlow:
-    when:
-      platform: ios
-    commands:
-      - takeScreenshot: .maestro/screenshots/ios/about-tab
+- takeScreenshot: .maestro/screenshots/${output.platform}/about-tab
 
 # タブナビゲーションのテスト - プロフィール
 - tapOn: "プロフィール"
 - assertVisible: "ユーザー情報"
-- runFlow:
-    when:
-      platform: android
-    commands:
-      - takeScreenshot: .maestro/screenshots/android/profile-tab
-- runFlow:
-    when:
-      platform: ios
-    commands:
-      - takeScreenshot: .maestro/screenshots/ios/profile-tab
+- takeScreenshot: .maestro/screenshots/${output.platform}/profile-tab
 # ホームに戻る
 - tapOn: "ホーム"
 - assertVisible: "📚 記事リスト"
@@ -158,16 +125,7 @@ appId: com.sugurutakahashi.coolapp
     id: "password-display"
 
 # 入力完了後のスクリーンショット
-- runFlow:
-    when:
-      platform: android
-    commands:
-      - takeScreenshot: .maestro/screenshots/android/login-form-filled
-- runFlow:
-    when:
-      platform: ios
-    commands:
-      - takeScreenshot: .maestro/screenshots/ios/login-form-filled
+- takeScreenshot: .maestro/screenshots/${output.platform}/login-form-filled
 
 # ログインボタンをタップ
 - tapOn:
@@ -177,16 +135,7 @@ appId: com.sugurutakahashi.coolapp
 - assertVisible: "ログイン成功"
 
 # ログイン成功のスクリーンショット
-- runFlow:
-    when:
-      platform: android
-    commands:
-      - takeScreenshot: .maestro/screenshots/android/login-success
-- runFlow:
-    when:
-      platform: ios
-    commands:
-      - takeScreenshot: .maestro/screenshots/ios/login-success
+- takeScreenshot: .maestro/screenshots/${output.platform}/login-success
 
 # アラートを閉じる
 - tapOn: "OK"

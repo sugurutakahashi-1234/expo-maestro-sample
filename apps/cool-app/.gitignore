@@ -41,3 +41,13 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Maestro
+# Studio実行時は.maestroフォルダをカレントディレクトリとして実行されるため、
+# スクリーンショットパスが二重になってしまう問題がある
+# (.maestro/screenshots/.maestro/screenshots/ios/xxx.png のようになる)
+#
+# 運用方針:
+# - CLI: 正式なテスト実行環境（スクリーンショットはgit管理）
+# - Studio: テスト作成・デバッグの補助ツール（スクリーンショットは無視）
+.maestro/screenshots/.maestro/
