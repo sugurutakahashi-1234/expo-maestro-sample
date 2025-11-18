@@ -1,0 +1,13 @@
+{
+  "core": {
+    "workingDir": ".reg",
+    "actualDir": ".maestro/screenshots",
+    "thresholdRate": 0.001,
+    "enshureBaselineStrategy": "new"
+  },
+  "plugins": {
+    "reg-publish-gcs-plugin": {
+      "bucketName": "vrt-sample"
+    }
+  }
+}

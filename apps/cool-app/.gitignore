@@ -51,3 +51,15 @@ app-example
 # - CLI: 正式なテスト実行環境（スクリーンショットはgit管理）
 # - Studio: テスト作成・デバッグの補助ツール（スクリーンショットは無視）
 .maestro/screenshots/.maestro/
+
+# VRT (Visual Regression Testing)
+.reg/                     # reg-suit作業ディレクトリ
+
+# GCP認証情報（絶対にコミットしない！）
+*-service-account-key.json
+service-account*.json
+gcp-credentials.json
+vrt-*.json
+
+# Environment files
+.env.local

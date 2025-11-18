@@ -51,7 +51,18 @@
       "Bash(maestro test --help:*)",
       "WebFetch(domain:ttpho.github.io)",
       "Bash(maestro test:*)",
-      "Bash(maestro --help:*)"
+      "Bash(maestro --help:*)",
+      "WebFetch(domain:blog.logrocket.com)",
+      "WebFetch(domain:engineering.mercari.com)",
+      "WebFetch(domain:www.chromatic.com)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:www.repeato.app)",
+      "WebFetch(domain:www.lost-pixel.com)",
+      "WebFetch(domain:reg-viz.github.io)",
+      "WebFetch(domain:www.cloudflare.com)",
+      "WebFetch(domain:www.backblaze.com)",
+      "WebFetch(domain:developers.cloudflare.com)",
+      "WebFetch(domain:gcp.permissions.cloud)"
     ],
     "deny": [],
     "ask": []

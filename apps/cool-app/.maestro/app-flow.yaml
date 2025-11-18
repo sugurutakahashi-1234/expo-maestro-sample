@@ -57,6 +57,18 @@ appId: com.sugurutakahashi.coolapp
 #    - package.jsonの statusbar:ios と statusbar:android スクリプトで自動設定
 #    - maestro:ios と maestro:android 実行時に自動で適用される
 #
+# 9. VRT (Visual Regression Testing) 環境
+#    - ツール: reg-suit + Google Cloud Storage
+#    - バケット: vrt-sample (asia-northeast1)
+#    - 認証: apps/cool-app/vrt-sample-4dde33b657e4.json
+#    - ベースライン保存先: GCS (永久無料枠5GB、Git管理外)
+#    - 差分閾値: 0.1% (thresholdRate: 0.001)
+#    - プラットフォーム別: ios/android
+#    - 実行: bun run vrt:run
+#    - ベースライン更新: bun run vrt:update
+#    - レポート: open .reg/index.html
+#    - E2Eテスト+VRT: bun run test:e2e
+#
 # ==========================================
 
 - launchApp:
