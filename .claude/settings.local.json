@@ -62,7 +62,9 @@
       "WebFetch(domain:www.cloudflare.com)",
       "WebFetch(domain:www.backblaze.com)",
       "WebFetch(domain:developers.cloudflare.com)",
-      "WebFetch(domain:gcp.permissions.cloud)"
+      "WebFetch(domain:gcp.permissions.cloud)",
+      "Bash(GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run:*)",
+      "Bash(GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx:*)"
     ],
     "deny": [],
     "ask": []

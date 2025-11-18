@@ -42,6 +42,7 @@
         "eslint-config-expo": "~10.0.0",
         "reg-keygen-git-hash-plugin": "^0.14.4",
         "reg-publish-gcs-plugin": "^0.14.4",
+        "reg-simple-keygen-plugin": "^0.14.2",
         "reg-suit": "^0.14.4",
         "typescript": "catalog:",
       },
@@ -1654,6 +1655,8 @@
     "reg-keygen-git-hash-plugin": ["reg-keygen-git-hash-plugin@0.14.5", "", { "dependencies": { "reg-suit-util": "^0.14.3", "shell-escape": "^0.2.0" } }, "sha512-7XcF/JPoHmLlQ/Px80BCQdTyfbeDiNmI9/u5sSC6rqvuxbZ/d9IjCz83ELRc832mHtuG3uRQCGXR1/HrV7h31A=="],
 
     "reg-publish-gcs-plugin": ["reg-publish-gcs-plugin@0.14.4", "", { "dependencies": { "@google-cloud/storage": "^7.0.0", "form-data": "^4.0.0", "mkdirp": "^1.0.4", "reg-suit-util": "^0.14.3", "uuid": "^9.0.0" } }, "sha512-wrpM4813DcZttf/DZjJ/vMY/oIH5wiOpzWVmrNnxPE2HbbqxkGivSlufKLXD8Ve42YrZVi4RfS0O8sqyVvVsUQ=="],
+
+    "reg-simple-keygen-plugin": ["reg-simple-keygen-plugin@0.14.2", "", {}, "sha512-49vn+OFw1Bw5GY0tBuOSG5TL9hSSIf4DT69ILaMETA6HxEYrIQ2bcQ5dQ9NFrEzZTBNDrFLXig+LWM/pwOYcrg=="],
 
     "reg-suit": ["reg-suit@0.14.5", "", { "dependencies": { "cp-file": "9.1.0", "ignore": "5.3.1", "inquirer": "8.2.6", "reg-suit-core": "^0.14.5", "reg-suit-util": "^0.14.3", "yargs": "17.0.1" }, "bin": { "reg-suit": "lib/cli.js" } }, "sha512-AWenzVuJ/MBUt8Ejaaom7SDN8PF71seIjIBBnYcdPcrs5CHEuCAERCCkv6EgEuU85vXS5gc0XzuJVMbj3ay0hQ=="],
 
