@@ -16,8 +16,8 @@
     "maestro:ios": "bun run statusbar:ios && DEVICE_ID=$(bun run device:ios) && maestro --device $DEVICE_ID test .maestro/app-flow.yaml",
     "maestro:android": "bun run statusbar:android && DEVICE_ID=$(bun run device:android) && maestro --device $DEVICE_ID test .maestro/app-flow.yaml",
     "maestro:all": "bun run maestro:ios && bun run maestro:android",
-    "vrt:run": "GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run && open .reg/index.html",
-    "vrt:update": "GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run --update-base",
+    "vrt:run": "EXPECTED_KEY=$(git rev-parse HEAD~1) ACTUAL_KEY=$(git rev-parse HEAD) GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run && open .reg/index.html",
+    "vrt:update": "ACTUAL_KEY=$(git rev-parse HEAD) GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run --update-base",
     "test:e2e": "bun run maestro:all && bun run vrt:run",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
@@ -59,6 +59,7 @@
     "eslint-config-expo": "~10.0.0",
     "reg-keygen-git-hash-plugin": "^0.14.4",
     "reg-publish-gcs-plugin": "^0.14.4",
+    "reg-simple-keygen-plugin": "^0.14.2",
     "reg-suit": "^0.14.4",
     "typescript": "catalog:"
   },

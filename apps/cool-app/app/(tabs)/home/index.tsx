@@ -15,7 +15,7 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.scrollView} contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Expo モノレポ with Bun 🚀</Text>
+        <Text style={styles.title}>Expo モノレポ with Bun ✨</Text>
         <Text style={styles.subtitle}>{formatMessage(getGreetingTime())}</Text>
         <Greeting name="開発者" />
         <Text style={styles.info}>

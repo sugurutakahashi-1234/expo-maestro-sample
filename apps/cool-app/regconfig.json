@@ -6,7 +6,10 @@
     "enshureBaselineStrategy": "new"
   },
   "plugins": {
-    "reg-keygen-git-hash-plugin": true,
+    "reg-simple-keygen-plugin": {
+      "expectedKey": "${EXPECTED_KEY}",
+      "actualKey": "${ACTUAL_KEY}"
+    },
     "reg-publish-gcs-plugin": {
       "bucketName": "vrt-sample"
     }
