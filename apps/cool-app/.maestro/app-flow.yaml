@@ -64,9 +64,6 @@ appId: com.sugurutakahashi.coolapp
 #    - ベースライン保存先: GCS (永久無料枠5GB、Git管理外)
 #    - 差分閾値: 0.1% (thresholdRate: 0.001)
 #    - プラットフォーム別: ios/android
-#    - 実行: bun run vrt:run
-#    - ベースライン更新: bun run vrt:update
-#    - レポート: open .reg/index.html
 #    - E2Eテスト+VRT: bun run test:e2e
 #
 #    【プラグイン選択の経緯】
@@ -77,20 +74,19 @@ appId: com.sugurutakahashi.coolapp
 #    - エラー: "Failed to detect the previous snapshot key" が発生し、
 #      expected ディレクトリが常に空でベースラインがダウンロードされなかった
 #    - 解決策: reg-simple-keygen-plugin に切り替え、expectedKey と actualKey を明示的に指定
-#      - expectedKey: $(git rev-parse HEAD~1) - 前のコミット
-#      - actualKey: $(git rev-parse HEAD) - 現在のコミット
 #    - 参考: https://zenn.dev/yu_ta_9/articles/6fb31dd82a6ef6
 #            https://zenn.dev/castingone_dev/articles/reg_distinct_push_pr
 #
-#    【VRTワークフロー】
+#    【ローカル開発】
 #    1. UI変更を実装
 #    2. Maestroテスト実行（スクリーンショット取得）: bun run maestro:ios
-#    3. 変更をコミット: git add . && git commit -m "..."
-#    4. VRT実行（前コミットとの比較）: bun run vrt:run
-#    5. レポート確認: .reg/index.html が自動で開く
-#    6. 差分が期待通りなら: bun run vrt:update でベースライン更新
+#    3. ブランチと比較:
+#       - origin/main と比較: bun run vrt:local:main
+#       - origin/develop と比較: bun run vrt:local:develop
+#    4. レポート確認: .reg/index.html が自動で開く
+#    5. 差分が期待通りなら変更をコミット & ベースライン更新: bun run vrt:local:update-base
 #
-#    【任意のコミット同士を比較する方法（ワンライナー）】
+#    【任意のコミット比較（ワンライナー）】
 #    EXPECTED_KEY=$(git rev-parse <比較元>) \
 #    ACTUAL_KEY=$(git rev-parse <比較先>) \
 #    GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json \
@@ -106,10 +102,11 @@ appId: com.sugurutakahashi.coolapp
 #    - PR時: mainブランチと比較（ベースライン更新なし）
 #      EXPECTED_KEY=${{ github.event.pull_request.base.sha }}
 #      ACTUAL_KEY=${{ github.sha }}
+#      bun run vrt:ci
 #
 #    - mainへのpush: ベースライン自動更新
 #      ACTUAL_KEY=${{ github.sha }}
-#      bun run vrt:ci:update
+#      bun run vrt:ci:update-base
 #
 #    - GitHub Secrets設定が必要: GCP_SA_KEY
 #    - ワークフロー: .github/workflows/vrt.yml

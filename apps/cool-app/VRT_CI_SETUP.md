@@ -8,7 +8,7 @@
 
 | 環境 | ベースライン | 比較対象 | ベースライン更新 |
 |------|------------|---------|----------------|
-| **ローカル** | `HEAD~1` | `HEAD` | 手動 (`bun run vrt:update`) |
+| **ローカル** | `origin/main` または `origin/develop` | `HEAD` | 手動 (`bun run vrt:local:update-base`) |
 | **CI (PR)** | `main` ブランチ | PR ブランチ | なし（比較のみ） |
 | **CI (main push)** | - | `main` | 自動（mainへのpush時） |
 
@@ -50,7 +50,7 @@ cat apps/cool-app/vrt-sample-4dde33b657e4.json
 2. **ベースライン自動更新**: GCSに新しいベースラインを保存
    ```bash
    ACTUAL_KEY=${{ github.sha }}  # mainの最新コミット
-   bun run vrt:ci:update
+   bun run vrt:ci:update-base
    ```
 
 ## ローカル開発
@@ -62,14 +62,34 @@ cat apps/cool-app/vrt-sample-4dde33b657e4.json
 # 2. Maestroテスト実行（スクリーンショット取得）
 bun run maestro:ios
 
-# 3. 前のコミットと比較
-bun run vrt:run
+# 3. ブランチと比較
+bun run vrt:local:main      # origin/main と比較（推奨）
+bun run vrt:local:develop   # origin/develop と比較
 
-# 4. 差分が期待通りなら、変更をコミット
+# 4. レポート確認（自動で開く）
+# .reg/index.html で差分を確認
+
+# 5. 差分が期待通りなら、変更をコミット
 git add . && git commit -m "feat: Update UI"
 
-# 5. ベースライン更新（次回の比較で使用）
-bun run vrt:update
+# 6. ベースライン更新（次回の比較で使用）
+bun run vrt:local:update-base
+```
+
+### よく使うコマンド
+
+```bash
+# origin/main と比較
+bun run vrt:local:main
+
+# origin/develop と比較
+bun run vrt:local:develop
+
+# ベースライン更新
+bun run vrt:local:update-base
+
+# E2Eテスト + VRT（mainとの比較）
+bun run test:e2e
 ```
 
 ### 任意のコミット同士を比較（ワンライナー）
@@ -98,7 +118,7 @@ npx reg-suit run && open .reg/index.html
 ```bash
 # mainブランチで実行
 bun run maestro:ios
-bun run vrt:update
+bun run vrt:local:update-base
 ```
 
 ### CI: GCS認証エラー
@@ -118,7 +138,7 @@ bun run vrt:update
 ```bash
 # 最新のスクリーンショットでベースライン更新
 bun run maestro:ios
-bun run vrt:update
+bun run vrt:local:update-base
 ```
 
 ## 運用フロー
