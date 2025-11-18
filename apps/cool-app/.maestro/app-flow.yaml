@@ -69,6 +69,32 @@ appId: com.sugurutakahashi.coolapp
 #    - レポート: open .reg/index.html
 #    - E2Eテスト+VRT: bun run test:e2e
 #
+#    【プラグイン選択の経緯】
+#    - 使用プラグイン: reg-simple-keygen-plugin
+#    - 理由: mainブランチでの開発に対応するため
+#    - reg-keygen-git-hash-plugin は topic branch (feature branch) 用に設計されており、
+#      main ブランチで直接開発する場合は「親コミット」の概念がないため動作しない
+#    - エラー: "Failed to detect the previous snapshot key" が発生し、
+#      expected ディレクトリが常に空でベースラインがダウンロードされなかった
+#    - 解決策: reg-simple-keygen-plugin に切り替え、expectedKey と actualKey を明示的に指定
+#      - expectedKey: $(git rev-parse HEAD~1) - 前のコミット
+#      - actualKey: $(git rev-parse HEAD) - 現在のコミット
+#    - 参考: https://zenn.dev/yu_ta_9/articles/6fb31dd82a6ef6
+#            https://zenn.dev/castingone_dev/articles/reg_distinct_push_pr
+#
+#    【VRTワークフロー】
+#    1. UI変更を実装
+#    2. Maestroテスト実行（スクリーンショット取得）: bun run maestro:ios
+#    3. 変更をコミット: git add . && git commit -m "..."
+#    4. VRT実行（前コミットとの比較）: bun run vrt:run
+#    5. レポート確認: .reg/index.html が自動で開く
+#    6. 差分が期待通りなら: bun run vrt:update でベースライン更新
+#
+#    【検証済み】
+#    - Changed items: 1 (絵文字変更 ✨ → 🎉 を正しく検出)
+#    - GCSからのベースラインダウンロード正常動作
+#    - 差分画像生成正常動作
+#
 # ==========================================
 
 - launchApp:
