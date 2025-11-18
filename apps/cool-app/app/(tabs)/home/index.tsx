@@ -19,7 +19,7 @@ export default function HomeScreen() {
         <Text style={styles.subtitle}>{formatMessage(getGreetingTime())}</Text>
         <Greeting name="開発者" />
         <Text style={styles.info}>
-          このコンポーネントはcool-packageワークスペースからインポートされていますテスト
+          このコンポーネントはcool-packageワークスペースからインポートされています
         </Text>
       </View>
 
