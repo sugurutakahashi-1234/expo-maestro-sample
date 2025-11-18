@@ -79,7 +79,7 @@ appId: com.sugurutakahashi.coolapp
 - evalScript: ${output.platform = maestro.platform}
 
 # ホーム画面の確認
-- assertVisible: "Expo モノレポ with Bun ✨"
+- assertVisible: "Expo モノレポ with Bun 🎉"
 - assertVisible: "📚 記事リスト"
 - takeScreenshot: .maestro/screenshots/${output.platform}/home-tab
 
@@ -172,7 +172,7 @@ appId: com.sugurutakahashi.coolapp
 # 一番上までスクロールして確認
 - scrollUntilVisible:
     element:
-        text: "Expo モノレポ with Bun ✨"
+        text: "Expo モノレポ with Bun 🎉"
     direction: UP
     timeout: 10000
-- assertVisible: "Expo モノレポ with Bun ✨"
+- assertVisible: "Expo モノレポ with Bun 🎉"
