@@ -40,6 +40,7 @@
         "@types/react": "catalog:",
         "eslint": "^9.25.0",
         "eslint-config-expo": "~10.0.0",
+        "reg-keygen-git-hash-plugin": "^0.14.4",
         "reg-publish-gcs-plugin": "^0.14.4",
         "reg-suit": "^0.14.4",
         "typescript": "catalog:",
@@ -1650,6 +1651,8 @@
 
     "reg-cli": ["reg-cli@0.18.13", "", { "dependencies": { "bluebird": "3.7.2", "chalk": "4.1.2", "cli-spinner": "0.2.10", "cross-spawn": "7.0.6", "del": "6.1.1", "glob": "7.2.3", "img-diff-js": "0.5.4", "jpeg-js": "^0.4.4", "lodash": "4.17.21", "make-dir": "3.1.0", "md5-file": "4.0.0", "meow": "^9.0.0", "mustache": "4.2.0", "x-img-diff-js": "0.3.5", "xmlbuilder2": "^3.1.1", "yargs-parser": "^21.0.1" }, "bin": { "reg-cli": "dist/cli.js" } }, "sha512-I6XVSZMtqO8vjflxzKSBrGTgDQLOtKtOfVvMg/0mIt/V3WwkphxCyxZvQUviMv5XfXgXHMvkA9wcYp2nfPbf9g=="],
 
+    "reg-keygen-git-hash-plugin": ["reg-keygen-git-hash-plugin@0.14.5", "", { "dependencies": { "reg-suit-util": "^0.14.3", "shell-escape": "^0.2.0" } }, "sha512-7XcF/JPoHmLlQ/Px80BCQdTyfbeDiNmI9/u5sSC6rqvuxbZ/d9IjCz83ELRc832mHtuG3uRQCGXR1/HrV7h31A=="],
+
     "reg-publish-gcs-plugin": ["reg-publish-gcs-plugin@0.14.4", "", { "dependencies": { "@google-cloud/storage": "^7.0.0", "form-data": "^4.0.0", "mkdirp": "^1.0.4", "reg-suit-util": "^0.14.3", "uuid": "^9.0.0" } }, "sha512-wrpM4813DcZttf/DZjJ/vMY/oIH5wiOpzWVmrNnxPE2HbbqxkGivSlufKLXD8Ve42YrZVi4RfS0O8sqyVvVsUQ=="],
 
     "reg-suit": ["reg-suit@0.14.5", "", { "dependencies": { "cp-file": "9.1.0", "ignore": "5.3.1", "inquirer": "8.2.6", "reg-suit-core": "^0.14.5", "reg-suit-util": "^0.14.3", "yargs": "17.0.1" }, "bin": { "reg-suit": "lib/cli.js" } }, "sha512-AWenzVuJ/MBUt8Ejaaom7SDN8PF71seIjIBBnYcdPcrs5CHEuCAERCCkv6EgEuU85vXS5gc0XzuJVMbj3ay0hQ=="],
@@ -1747,6 +1750,8 @@
     "shebang-command": ["shebang-command@2.0.0", "", { "dependencies": { "shebang-regex": "^3.0.0" } }, "sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA=="],
 
     "shebang-regex": ["shebang-regex@3.0.0", "", {}, "sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A=="],
+
+    "shell-escape": ["shell-escape@0.2.0", "", {}, "sha512-uRRBT2MfEOyxuECseCZd28jC1AJ8hmqqneWQ4VWUTgCAFvb3wKU1jLqj6egC4Exrr88ogg3dp+zroH4wJuaXzw=="],
 
     "shell-quote": ["shell-quote@1.8.3", "", {}, "sha512-ObmnIF4hXNg1BqhnHmgbDETF8dLPCggZWBjkQfhZpbszZnYur5DUljTcCHii5LC3J5E0yeO/1LIMyH+UvHQgyw=="],
 

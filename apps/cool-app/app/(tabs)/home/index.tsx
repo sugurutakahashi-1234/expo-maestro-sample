@@ -15,11 +15,11 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.scrollView} contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Expo モノレポ with Bun</Text>
+        <Text style={styles.title}>Expo モノレポ with Bun 🚀</Text>
         <Text style={styles.subtitle}>{formatMessage(getGreetingTime())}</Text>
         <Greeting name="開発者" />
         <Text style={styles.info}>
-          このコンポーネントはcool-packageワークスペースからインポートされています
+          このコンポーネントはcool-packageワークスペースからインポートされていますテスト
         </Text>
       </View>
 
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   link: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: "#007AFF",
+    backgroundColor: "#34C759",
     borderRadius: 8,
   },
   linkText: {

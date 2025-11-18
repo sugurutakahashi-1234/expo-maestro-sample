@@ -6,6 +6,7 @@
     "enshureBaselineStrategy": "new"
   },
   "plugins": {
+    "reg-keygen-git-hash-plugin": true,
     "reg-publish-gcs-plugin": {
       "bucketName": "vrt-sample"
     }
