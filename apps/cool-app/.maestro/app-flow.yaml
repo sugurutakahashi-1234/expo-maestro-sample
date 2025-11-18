@@ -90,6 +90,17 @@ appId: com.sugurutakahashi.coolapp
 #    5. レポート確認: .reg/index.html が自動で開く
 #    6. 差分が期待通りなら: bun run vrt:update でベースライン更新
 #
+#    【任意のコミット同士を比較する方法】
+#    スクリプト: ./scripts/vrt-compare.sh または bun run vrt:compare
+#
+#    使用例:
+#    - デフォルト（HEAD~1 vs HEAD）: bun run vrt:compare
+#    - 5個前と現在: bun run vrt:compare HEAD~5
+#    - 10個前と現在: bun run vrt:compare HEAD~10 HEAD
+#    - 特定のハッシュ: bun run vrt:compare 8bac928 ed32570
+#    - タグとブランチ: bun run vrt:compare v1.0.0 main
+#    - 2つのブランチ: bun run vrt:compare develop main
+#
 #    【検証済み】
 #    - Changed items: 1 (絵文字変更 ✨ → 🎉 を正しく検出)
 #    - GCSからのベースラインダウンロード正常動作

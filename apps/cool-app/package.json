@@ -18,6 +18,7 @@
     "maestro:all": "bun run maestro:ios && bun run maestro:android",
     "vrt:run": "EXPECTED_KEY=$(git rev-parse HEAD~1) ACTUAL_KEY=$(git rev-parse HEAD) GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run && open .reg/index.html",
     "vrt:update": "ACTUAL_KEY=$(git rev-parse HEAD) GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run --update-base",
+    "vrt:compare": "./scripts/vrt-compare.sh",
     "test:e2e": "bun run maestro:all && bun run vrt:run",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
