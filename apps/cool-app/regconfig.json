@@ -1,9 +1,8 @@
 {
   "core": {
     "workingDir": ".reg",
-    "actualDir": ".maestro/screenshots",
-    "thresholdRate": 0.001,
-    "enshureBaselineStrategy": "new"
+    "actualDir": "${ACTUAL_DIR:-.maestro/screenshots}",
+    "thresholdRate": 0.001
   },
   "plugins": {
     "reg-simple-keygen-plugin": {

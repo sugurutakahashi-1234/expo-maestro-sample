@@ -54,6 +54,7 @@ app-example
 
 # VRT (Visual Regression Testing)
 .reg/                     # reg-suit作業ディレクトリ
+.maestro/snapshots/       # VRTスナップショット履歴（GCS管理）
 
 # GCP認証情報（絶対にコミットしない！）
 *-service-account-key.json
