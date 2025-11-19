@@ -1,6 +1,9 @@
 import { $ } from "bun";
 import { existsSync } from "fs";
 
+const SNAPSHOTS_BASE_DIR = ".maestro/snapshots";
+const SCREENSHOTS_DIR = ".maestro/screenshots";
+
 try {
   // コマンドライン引数をチェック
   const forceMode = process.argv.includes("--force");
@@ -30,12 +33,11 @@ try {
   const hash = (await $`git rev-parse --short HEAD`.text()).trim();
 
   // スナップショットディレクトリ名を生成
-  const snapshotDir = `.maestro/snapshots/${version}_${branch}_${datetime}_${hash}`;
+  const snapshotDir = `${SNAPSHOTS_BASE_DIR}/${version}_${branch}_${datetime}_${hash}`;
 
   // スクリーンショットディレクトリの存在確認
-  const screenshotsDir = ".maestro/screenshots";
-  if (!existsSync(screenshotsDir)) {
-    console.error(`❌ Error: Screenshots directory not found: ${screenshotsDir}`);
+  if (!existsSync(SCREENSHOTS_DIR)) {
+    console.error(`❌ Error: Screenshots directory not found: ${SCREENSHOTS_DIR}`);
     console.log("💡 Run 'bun run maestro:ios' or 'bun run maestro:android' first");
     process.exit(1);
   }
@@ -50,7 +52,7 @@ try {
   await $`mkdir -p ${snapshotDir}`;
 
   // スクリーンショットをコピー
-  await $`cp -r ${screenshotsDir}/. ${snapshotDir}/`;
+  await $`cp -r ${SCREENSHOTS_DIR}/. ${snapshotDir}/`;
 
   console.log(`✅ Snapshot saved: ${snapshotDir}`);
 } catch (error) {
