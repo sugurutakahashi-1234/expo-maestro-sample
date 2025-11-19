@@ -1,7 +1,7 @@
 {
   "core": {
     "workingDir": ".reg",
-    "actualDir": "${ACTUAL_DIR:-.maestro/screenshots}",
+    "actualDir": "${ACTUAL_DIR}",
     "thresholdRate": 0.001
   },
   "plugins": {

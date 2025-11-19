@@ -1,9 +1,8 @@
-import { Text, View, StyleSheet, ScrollView, Pressable } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Text, View, StyleSheet, ScrollView } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 
 export default function ProfileScreen() {
   const params = useLocalSearchParams();
-  const router = useRouter();
   const username = params.username || "開発者";
 
   return (
@@ -11,58 +10,34 @@ export default function ProfileScreen() {
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>プロフィール</Text>
-          <Text style={styles.subtitle}>こんにちは、{username}さん 👋</Text>
+          <Text style={styles.subtitle}>ようこそ、{username}さん!</Text>
         </View>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>ユーザー情報</Text>
-          <View style={styles.cardContent}>
-            <View style={styles.row}>
-              <Text style={styles.label}>ユーザー名:</Text>
-              <Text style={styles.value}>{username}</Text>
-            </View>
-
-            <View style={styles.row}>
-              <Text style={styles.label}>メール:</Text>
-              <Text style={styles.value}>dev@awesome-app.com</Text>
-            </View>
-
-            <View style={styles.row}>
-              <Text style={styles.label}>登録日:</Text>
-              <Text style={styles.value}>2025年11月</Text>
-            </View>
-          </View>
+          <Text style={styles.label}>ユーザー名:</Text>
+          <Text style={styles.value}>{username}</Text>
+          <Text style={styles.label}>メール:</Text>
+          <Text style={styles.value}>developer@coolapp.com</Text>
+          <Text style={styles.label}>登録日:</Text>
+          <Text style={styles.value}>2025年1月</Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>機能紹介</Text>
-          <View style={styles.cardContent}>
-            <Text style={styles.infoText}>
-              このプロフィール画面では以下の機能を確認できます:
-            </Text>
-            <Text style={styles.bullet}>• スムーズなタブ間ナビゲーション</Text>
-            <Text style={styles.bullet}>• 動的なパラメータ受け渡し</Text>
-            <Text style={styles.bullet}>• レスポンシブなUI表示</Text>
-          </View>
+          <Text style={styles.cardTitle}>このタブについて</Text>
+          <Text style={styles.infoText}>
+            これはシンプルなプロフィールタブ画面です。以下を示しています:
+          </Text>
+          <Text style={styles.bullet}>- タブナビゲーション（3つのタブのうちの1つ）</Text>
+          <Text style={styles.bullet}>- ルートパラメータの読み取り</Text>
+          <Text style={styles.bullet}>- 基本的なユーザー情報の表示</Text>
         </View>
 
         <View style={styles.highlightBox}>
-          <Text style={styles.highlightTitle}>📱 アーキテクチャ</Text>
+          <Text style={styles.highlightTitle}>📱 ナビゲーションパターン</Text>
           <Text style={styles.highlightText}>
-            Expo Routerのタブベースナビゲーションを採用。
-            画面間の移動がスムーズで、常に快適な操作性を提供します。
+            この画面はTabsナビゲーターの一部です。タブバーに常に表示され、プロフィールタブをタップすることでいつでもアクセスできます。
           </Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>詳細情報</Text>
-          <Pressable
-            style={styles.licenseButton}
-            onPress={() => router.push("/license")}
-          >
-            <Text style={styles.licenseButtonText}>ライセンス情報 📄</Text>
-            <Text style={styles.arrow}>›</Text>
-          </Pressable>
         </View>
       </View>
     </ScrollView>
@@ -72,25 +47,25 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#faf8ff",
+    backgroundColor: "#f2f4f7",
   },
   content: {
-    padding: 20,
-    gap: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    gap: 18,
   },
   header: {
     alignItems: "center",
-    paddingVertical: 20,
-    gap: 8,
+    gap: 6,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#6b21a8",
+    color: "#333",
   },
   subtitle: {
-    fontSize: 16,
-    color: "#7c3aed",
+    fontSize: 15,
+    color: "#777",
   },
   card: {
     backgroundColor: "#fff",
@@ -103,84 +78,49 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cardTitle: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: "700",
     color: "#333",
     marginBottom: 12,
   },
-  cardContent: {
-    gap: 12,
-  },
-  row: {
-    gap: 4,
-  },
   label: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#666",
+    color: "#4b5563",
+    marginBottom: 4,
   },
   value: {
-    fontSize: 16,
-    color: "#333",
+    fontSize: 15,
+    color: "#4b5563",
+    marginBottom: 8,
   },
   infoText: {
     fontSize: 14,
-    color: "#666",
-    marginBottom: 8,
+    color: "#6b7280",
+    marginBottom: 10,
   },
   bullet: {
     fontSize: 14,
-    color: "#666",
-    marginLeft: 16,
+    color: "#6b7280",
+    marginLeft: 4,
+    marginBottom: 6,
   },
   highlightBox: {
-    backgroundColor: "#f3e8ff",
+    backgroundColor: "#e8f3ea",
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#d8b4fe",
+    borderColor: "#cfe8d5",
   },
   highlightTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#7c3aed",
+    color: "#166534",
     marginBottom: 8,
   },
   highlightText: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 20,
-    color: "#8b5cf6",
-  },
-  section: {
-    gap: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 4,
-  },
-  licenseButton: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  licenseButtonText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#8b5cf6",
-  },
-  arrow: {
-    fontSize: 24,
-    color: "#999",
-    fontWeight: "300",
+    color: "#1f2937",
   },
 });

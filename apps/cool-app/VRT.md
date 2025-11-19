@@ -113,13 +113,65 @@ bun run vrt:snapshot:local:force
 
 ## リモートワークフロー (CI/CD用)
 
-GitHub Actionsでの自動VRT実行とチーム共有用。
+GitHub Actionsでの自動VRT実行とチーム共有用。ローカルと同じ命名規則でGCSに保存。
 
 ### 基本コマンド
 
 ```bash
-# リモート比較実行 (GCSから取得して比較)
-bun run vrt:compare:remote
+# 1. Maestroテスト実行 → スクリーンショット取得
+bun run maestro:ios
+
+# 2. ローカルスナップショット作成
+bun run vrt:snapshot:local
+# → .maestro/snapshots/{branch}/{version}_{datetime}_{hash}/
+
+# 3. GCSにベースライン公開（初回のみ）
+bun run vrt:publish:remote <hash>
+# → EXPECTED_KEYなしでreg-suit runを実行
+# → すべての画像が"new items"としてGCSに保存
+
+# 4. 出力されたコマンドをコピー&実行
+ACTUAL_DIR=... ACTUAL_KEY=... GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run
+
+# 5. ハッシュから比較コマンド生成
+bun run vrt:find:remote <expected-hash> <actual-hash>
+# → EXPECTED_KEYとACTUAL_KEYを指定してreg-suit run
+
+# 6. 出力されたコマンドをコピー&実行
+ACTUAL_DIR=.maestro/snapshots/feature/... EXPECTED_KEY=main/... ACTUAL_KEY=feature/... GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run; open .reg/index.html
+```
+
+### 実践例
+
+#### 例1: mainブランチでベースライン作成
+
+```bash
+git checkout main && git pull
+bun run maestro:ios
+bun run vrt:snapshot:local
+# → .maestro/snapshots/main/1.0.0_2025-11-19_1142_041e30c/
+
+bun run vrt:publish:remote 041e30c
+# → ACTUAL_DIR=... ACTUAL_KEY=... npx reg-suit run
+
+# コマンドを実行してGCSに公開（EXPECTED_KEYなしなので"new items"として保存）
+```
+
+#### 例2: featureブランチで比較
+
+```bash
+git checkout feature/new-ui
+bun run maestro:ios
+bun run vrt:snapshot:local
+# → .maestro/snapshots/feature_new-ui/1.0.0_2025-11-19_1430_f6e97f4/
+
+bun run vrt:publish:remote f6e97f4
+# → ACTUAL_DIR=... ACTUAL_KEY=... npx reg-suit run
+# → コマンド実行してGCSに公開（EXPECTED_KEYなし）
+
+# mainとの比較
+bun run vrt:find:remote 041e30c f6e97f4
+# → コマンド出力 → 実行
 ```
 
 ### GCS設定
@@ -128,6 +180,7 @@ bun run vrt:compare:remote
 - **リージョン**: `asia-northeast1`
 - **認証ファイル**: `vrt-sample-4dde33b657e4.json`
 - **差分閾値**: 0.1% (thresholdRate: 0.001)
+- **命名規則**: `{branch}/{version}_{datetime}_{hash}` (ローカルと同じ)
 
 ---
 
