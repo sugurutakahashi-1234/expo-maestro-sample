@@ -59,8 +59,9 @@ function extractKeyFromPath(path: string): string {
     // 2. compare: 実行（すべてが"new items"になる、out.json生成）
     // 3. publish: 実行（out.jsonが必要なため、runコマンドが必須）
     //
-    // 注: `reg-suit publish`単独ではout.jsonがないため失敗する
-    console.log(`ACTUAL_DIR=${snapshot} ACTUAL_KEY=${key} GOOGLE_APPLICATION_CREDENTIALS=${GCS_CREDENTIALS} bunx reg-suit run`);
+    // 注1: `reg-suit publish`単独ではout.jsonがないため失敗する
+    // 注2: .regディレクトリをクリーンアップしないと、残っているexpectedと比較されてしまう
+    console.log(`rm -rf .reg; ACTUAL_DIR=${snapshot} ACTUAL_KEY=${key} GOOGLE_APPLICATION_CREDENTIALS=${GCS_CREDENTIALS} bunx reg-suit run`);
   } catch (error) {
     console.error("❌ Error:", error);
     process.exit(1);
