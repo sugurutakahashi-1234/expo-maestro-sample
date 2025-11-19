@@ -25,7 +25,7 @@ Maestro E2Eテストで生成されたスクリーンショットを使用して
 
 ### スナップショット保存先
 
-- **ローカル**: `.maestro/snapshots/{branch}/{version}_{datetime}_{hash}/`
+- **ローカル**: `.maestro/snapshots/{branch}/{version}/{hash}/`
 - **リモート**: GCS bucket `vrt-sample` (asia-northeast1)
 
 ---
@@ -42,7 +42,7 @@ bun run maestro:ios
 
 # 2. スナップショット作成
 bun run vrt:snapshot:local
-# → .maestro/snapshots/{branch}/{version}_{datetime}_{hash}/
+# → .maestro/snapshots/{branch}/{version}/{hash}/
 
 # 3. スナップショット一覧確認
 bun run vrt:list
@@ -115,6 +115,23 @@ bun run vrt:snapshot:local:force
 
 GitHub Actionsでの自動VRT実行とチーム共有用。ローカルと同じ命名規則でGCSに保存。
 
+### 初回セットアップ
+
+リモートワークフローを使用する前に、GCS認証情報を設定する必要があります。
+
+```bash
+# 1. exampleファイルをコピー
+cp vrt-gcs-credentials.json.example vrt-gcs-credentials.json
+
+# 2. GCPコンソールでサービスアカウントキーを取得
+# https://console.cloud.google.com/iam-admin/serviceaccounts
+
+# 3. 取得したJSONの内容でvrt-gcs-credentials.jsonを上書き
+# （project_id, private_key, client_emailなどを実際の値に置き換え）
+```
+
+**重要**: `vrt-gcs-credentials.json` は `.gitignore` で除外されています。絶対にコミットしないでください。
+
 ### 基本コマンド
 
 ```bash
@@ -123,7 +140,7 @@ bun run maestro:ios
 
 # 2. ローカルスナップショット作成
 bun run vrt:snapshot:local
-# → .maestro/snapshots/{branch}/{version}_{datetime}_{hash}/
+# → .maestro/snapshots/{branch}/{version}/{hash}/
 
 # 3. GCSにベースライン公開（初回のみ）
 bun run vrt:publish:remote <hash>
@@ -149,7 +166,7 @@ ACTUAL_DIR=.maestro/snapshots/feature/... EXPECTED_KEY=main/... ACTUAL_KEY=featu
 git checkout main && git pull
 bun run maestro:ios
 bun run vrt:snapshot:local
-# → .maestro/snapshots/main/1.0.0_2025-11-19_1142_041e30c/
+# → .maestro/snapshots/main/1.0.0/041e30c/
 
 bun run vrt:publish:remote 041e30c
 # → ACTUAL_DIR=... ACTUAL_KEY=... npx reg-suit run
@@ -163,7 +180,7 @@ bun run vrt:publish:remote 041e30c
 git checkout feature/new-ui
 bun run maestro:ios
 bun run vrt:snapshot:local
-# → .maestro/snapshots/feature_new-ui/1.0.0_2025-11-19_1430_f6e97f4/
+# → .maestro/snapshots/feature_new-ui/1.0.0/f6e97f4/
 
 bun run vrt:publish:remote f6e97f4
 # → ACTUAL_DIR=... ACTUAL_KEY=... npx reg-suit run
@@ -178,9 +195,9 @@ bun run vrt:find:remote 041e30c f6e97f4
 
 - **バケット名**: `vrt-sample`
 - **リージョン**: `asia-northeast1`
-- **認証ファイル**: `vrt-sample-4dde33b657e4.json`
+- **認証ファイル**: `vrt-gcs-credentials.json` (gitignore済み)
 - **差分閾値**: 0.1% (thresholdRate: 0.001)
-- **命名規則**: `{branch}/{version}_{datetime}_{hash}` (ローカルと同じ)
+- **命名規則**: `{branch}/{version}/{hash}` (ローカルと同じ)
 
 ---
 
@@ -189,11 +206,11 @@ bun run vrt:find:remote 041e30c f6e97f4
 ### 命名規則
 
 ```
-{version}_{datetime}_{hash}
+{branch}/{version}/{hash}
 ```
 
+- **branch**: ブランチ名（サニタイズ済み、`/` → `_`）(例: `main`, `feature_new-ui`)
 - **version**: package.jsonのバージョン (例: `1.0.0`)
-- **datetime**: 作成日時 (例: `2025-11-19_1430`)
 - **hash**: コミットハッシュ短縮7文字 (例: `abc123d`)
 
 ### ディレクトリ構造
@@ -201,16 +218,18 @@ bun run vrt:find:remote 041e30c f6e97f4
 ```
 .maestro/snapshots/
 ├── main/
-│   ├── 1.0.0_2025-11-18_1430_abc123d/
-│   │   └── ios/
-│   │       ├── home-tab.png
-│   │       ├── about-tab.png
-│   │       └── ...
-│   └── 1.0.0_2025-11-19_0900_def456a/
-│       └── ...
+│   └── 1.0.0/
+│       ├── abc123d/
+│       │   └── ios/
+│       │       ├── home-tab.png
+│       │       ├── about-tab.png
+│       │       └── ...
+│       └── def456a/
+│           └── ...
 └── feature_change-ui/
-    └── 1.0.0_2025-11-19_1221_f6e97f4/
-        └── ...
+    └── 1.0.0/
+        └── f6e97f4/
+            └── ...
 ```
 
 ### クリーンアップ
@@ -270,6 +289,81 @@ bun run vrt:list
 
 # 正しいハッシュを使用
 bun run vrt:find:local 041e30c f6e97f4
+```
+
+---
+
+## CI/CD運用
+
+GitHub Actionsを使用した自動VRT実行の運用方法。
+
+### 概要
+
+**パターン1: マージ後ベースライン更新**を採用しています：
+
+1. **mainブランチ** (merge後): ベースラインを自動更新
+2. **PRブランチ**: mainのベースラインと比較
+
+### ワークフロー
+
+#### 1. ベースライン更新 (`.github/workflows/vrt-baseline.yml`)
+
+mainブランチにマージされたときに自動実行：
+
+```yaml
+on:
+  push:
+    branches: [main]
+
+jobs:
+  update-baseline:
+    steps:
+      - スナップショット作成 (--force)
+      - GCS公開
+```
+
+#### 2. PR比較 (`.github/workflows/vrt-pr.yml`)
+
+PRが作成・更新されたときに自動実行：
+
+```yaml
+on:
+  pull_request:
+
+jobs:
+  vrt-compare:
+    steps:
+      - PRスナップショット作成 (--force)
+      - GCS公開
+      - mainベースラインと比較
+```
+
+### 制約事項
+
+1. **Maestro実行不可**: CI環境ではMaestroを実行できないため、`.maestro/screenshots` を事前にコミット必要
+2. **スナップショット作成**: CI環境では `--force` フラグで強制作成
+
+### TODO項目
+
+以下の機能は未実装です：
+
+- [ ] **GCS認証情報の環境変数対応**
+  - 現在は `vrt-gcs-credentials.json` がローカルにある前提
+  - CI環境では `GCS_SERVICE_ACCOUNT_JSON` からJSONを読み込む必要がある
+  - GitHub Secretsの設定手順が必要
+
+### GitHub Secrets設定 (TODO)
+
+CI/CD運用には以下のSecretが必要です（未実装）：
+
+```bash
+# GitHub リポジトリの Settings > Secrets and variables > Actions
+
+GCS_SERVICE_ACCOUNT_JSON='{
+  "type": "service_account",
+  "project_id": "...",
+  ...
+}'
 ```
 
 ---

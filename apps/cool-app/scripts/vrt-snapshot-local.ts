@@ -29,11 +29,10 @@ try {
   const branch = (await $`git rev-parse --abbrev-ref HEAD`.text())
     .trim()
     .replace(/[^a-zA-Z0-9._-]/g, "_");
-  const datetime = (await $`date '+%Y-%m-%d_%H%M'`.text()).trim();
-  const hash = (await $`git rev-parse --short HEAD`.text()).trim();
+  const hash = (await $`git rev-parse --short=7 HEAD`.text()).trim();
 
   // スナップショットディレクトリ名を生成
-  const snapshotDir = `${SNAPSHOTS_BASE_DIR}/${branch}/${version}_${datetime}_${hash}`;
+  const snapshotDir = `${SNAPSHOTS_BASE_DIR}/${branch}/${version}/${hash}`;
   // スクリーンショットディレクトリの存在確認
   if (!existsSync(SCREENSHOTS_DIR)) {
     console.error(`❌ Error: Screenshots directory not found: ${SCREENSHOTS_DIR}`);

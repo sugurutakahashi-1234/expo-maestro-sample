@@ -1,0 +1,47 @@
+name: VRT Baseline Update
+
+# main ブランチにマージされたときにベースラインを更新
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-baseline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 全履歴を取得（git log用）
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        working-directory: apps/cool-app
+        run: bun install
+
+      # TODO: GCS認証情報の設定
+      # 現在は認証情報がハードコードされているため、環境変数対応が必要
+      # env:
+      #   GCS_SERVICE_ACCOUNT_JSON: ${{ secrets.GCS_SERVICE_ACCOUNT_JSON }}
+
+      - name: Create snapshot
+        working-directory: apps/cool-app
+        run: bun run vrt:snapshot:local:force
+
+      - name: Publish to GCS
+        working-directory: apps/cool-app
+        run: |
+          # 最新のコミットハッシュを取得
+          HASH=$(git rev-parse --short=7 HEAD)
+          # TODO: --ci フラグで認証情報を環境変数から読み込む対応が必要
+          COMMAND=$(bun run vrt:publish:remote $HASH)
+          echo "Publishing baseline: $COMMAND"
+          eval "$COMMAND"
+
+      - name: Summary
+        run: |
+          echo "✅ VRT baseline updated for commit $(git rev-parse --short=7 HEAD)"

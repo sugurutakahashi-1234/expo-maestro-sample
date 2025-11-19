@@ -1,0 +1,73 @@
+name: VRT PR Comparison
+
+# PRが作成・更新されたときにVRT比較を実行
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  vrt-compare:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 全履歴を取得
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        working-directory: apps/cool-app
+        run: bun install
+
+      # TODO: GCS認証情報の設定
+      # env:
+      #   GCS_SERVICE_ACCOUNT_JSON: ${{ secrets.GCS_SERVICE_ACCOUNT_JSON }}
+
+      - name: Create PR snapshot
+        working-directory: apps/cool-app
+        run: bun run vrt:snapshot:local:force
+
+      - name: Publish PR snapshot to GCS
+        working-directory: apps/cool-app
+        run: |
+          PR_HASH=$(git rev-parse --short=7 HEAD)
+          # TODO: --ci フラグで認証情報を環境変数から読み込む対応が必要
+          COMMAND=$(bun run vrt:publish:remote $PR_HASH)
+          echo "Publishing PR snapshot: $COMMAND"
+          eval "$COMMAND"
+
+      - name: Compare with baseline
+        working-directory: apps/cool-app
+        run: |
+          # ベースブランチのハッシュを取得
+          BASE_HASH=$(git rev-parse --short=7 ${{ github.event.pull_request.base.sha }})
+          PR_HASH=$(git rev-parse --short=7 HEAD)
+
+          echo "Base commit: $BASE_HASH"
+          echo "PR commit: $PR_HASH"
+
+          # パス直接構築により、GCS検索不要で比較可能
+          # TODO: --ci フラグで認証情報を環境変数から読み込む対応が必要
+          COMMAND=$(bun run vrt:find:remote $BASE_HASH $PR_HASH)
+          echo "Comparing: $COMMAND"
+          eval "$COMMAND"
+
+      - name: Upload VRT report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vrt-report
+          path: apps/cool-app/.reg/
+          retention-days: 30
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## VRT Comparison" >> $GITHUB_STEP_SUMMARY
+          echo "- Base: ${{ github.event.pull_request.base.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **TODO**: GCS認証情報の環境変数対応が必要です" >> $GITHUB_STEP_SUMMARY

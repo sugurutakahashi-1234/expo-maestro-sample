@@ -1,37 +1,11 @@
 import { $ } from "bun";
+import { existsSync } from "fs";
 
 const SNAPSHOTS_BASE_DIR = ".maestro/snapshots";
-const GCS_CREDENTIALS = "./vrt-sample-4dde33b657e4.json";
+const GCS_CREDENTIALS = "./vrt-gcs-credentials.json";
 
 // コマンドライン引数を取得
 const args = process.argv.slice(2);
-
-/**
- * 入力から末尾のハッシュを抽出
- * "1.0.0_2025-11-19_1142_041e30c" → "041e30c"
- * "041e30c" → "041e30c"
- */
-function extractHash(input: string): string {
-  const parts = input.split("_");
-  return parts[parts.length - 1];
-}
-
-/**
- * findコマンドを使って指定されたハッシュで終わるディレクトリを見つける
- */
-async function findSnapshotByHash(hash: string): Promise<string | null> {
-  const result = await $`find ${SNAPSHOTS_BASE_DIR} -type d -name "*_${hash}"`.text();
-  const paths = result.trim().split("\n").filter(Boolean);
-  return paths[0] || null;
-}
-
-/**
- * ディレクトリパスから完全なGCSキーを抽出
- * ".maestro/snapshots/main/1.0.0_2025-11-19_1142_041e30c" → "main/1.0.0_2025-11-19_1142_041e30c"
- */
-function extractKeyFromPath(path: string): string {
-  return path.replace(`${SNAPSHOTS_BASE_DIR}/`, "");
-}
 
 (async () => {
   try {
@@ -41,17 +15,26 @@ function extractKeyFromPath(path: string): string {
       process.exit(1);
     }
 
-    const input = args[0];
-    const hash = extractHash(input);
+    const hash = args[0];
 
-    const snapshot = await findSnapshotByHash(hash);
+    // package.jsonからバージョンを取得
+    const pkg = await Bun.file("./package.json").json();
+    const version = pkg.version;
 
-    if (!snapshot) {
-      console.error(`❌ Snapshot not found for hash: ${hash}`);
+    // 現在のブランチを取得してサニタイズ
+    const branch = (await $`git rev-parse --abbrev-ref HEAD`.text())
+      .trim()
+      .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+    // スナップショットパスとGCSキーを直接構築
+    const snapshot = `${SNAPSHOTS_BASE_DIR}/${branch}/${version}/${hash}`;
+    const key = `${branch}/${version}/${hash}`;
+
+    // 存在確認
+    if (!existsSync(snapshot)) {
+      console.error(`❌ Snapshot not found: ${snapshot}`);
       process.exit(1);
     }
-
-    const key = extractKeyFromPath(snapshot);
 
     // EXPECTED_KEYを設定しないことで、ベースライン作成モードになる
     // reg-suit runの動作:

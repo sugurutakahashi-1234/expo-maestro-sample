@@ -6,20 +6,11 @@ const SNAPSHOTS_BASE_DIR = ".maestro/snapshots";
 const args = process.argv.slice(2);
 
 /**
- * 入力から末尾のハッシュを抽出
- * "1.0.0_2025-11-19_1142_041e30c" → "041e30c"
- * "041e30c" → "041e30c"
- */
-function extractHash(input: string): string {
-  const parts = input.split("_");
-  return parts[parts.length - 1];
-}
-
-/**
- * findコマンドを使って指定されたハッシュで終わるディレクトリを見つける
+ * findコマンドを使って指定されたハッシュのディレクトリを見つける
+ * ブランチやバージョンが異なる場合でも検索可能
  */
 async function findSnapshotByHash(hash: string): Promise<string | null> {
-  const result = await $`find ${SNAPSHOTS_BASE_DIR} -type d -name "*_${hash}"`.text();
+  const result = await $`find ${SNAPSHOTS_BASE_DIR} -type d -name ${hash}`.text();
   const paths = result.trim().split("\n").filter(Boolean);
   return paths[0] || null;
 }
@@ -32,9 +23,7 @@ async function findSnapshotByHash(hash: string): Promise<string | null> {
       process.exit(1);
     }
 
-    const [expectedInput, actualInput] = args;
-    const expectedHash = extractHash(expectedInput);
-    const actualHash = extractHash(actualInput);
+    const [expectedHash, actualHash] = args;
 
     const expectedSnapshot = await findSnapshotByHash(expectedHash);
     const actualSnapshot = await findSnapshotByHash(actualHash);

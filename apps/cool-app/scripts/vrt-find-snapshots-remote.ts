@@ -1,37 +1,11 @@
 import { $ } from "bun";
+import { existsSync } from "fs";
 
 const SNAPSHOTS_BASE_DIR = ".maestro/snapshots";
-const GCS_CREDENTIALS = "./vrt-sample-4dde33b657e4.json";
+const GCS_CREDENTIALS = "./vrt-gcs-credentials.json";
 
 // コマンドライン引数を取得
 const args = process.argv.slice(2);
-
-/**
- * 入力から末尾のハッシュを抽出
- * "1.0.0_2025-11-19_1142_041e30c" → "041e30c"
- * "041e30c" → "041e30c"
- */
-function extractHash(input: string): string {
-  const parts = input.split("_");
-  return parts[parts.length - 1];
-}
-
-/**
- * findコマンドを使って指定されたハッシュで終わるディレクトリを見つける
- */
-async function findSnapshotByHash(hash: string): Promise<string | null> {
-  const result = await $`find ${SNAPSHOTS_BASE_DIR} -type d -name "*_${hash}"`.text();
-  const paths = result.trim().split("\n").filter(Boolean);
-  return paths[0] || null;
-}
-
-/**
- * ディレクトリパスから完全なGCSキーを抽出
- * ".maestro/snapshots/main/1.0.0_2025-11-19_1142_041e30c" → "main/1.0.0_2025-11-19_1142_041e30c"
- */
-function extractKeyFromPath(path: string): string {
-  return path.replace(`${SNAPSHOTS_BASE_DIR}/`, "");
-}
 
 (async () => {
   try {
@@ -41,25 +15,33 @@ function extractKeyFromPath(path: string): string {
       process.exit(1);
     }
 
-    const [expectedInput, actualInput] = args;
-    const expectedHash = extractHash(expectedInput);
-    const actualHash = extractHash(actualInput);
+    const [expectedHash, actualHash] = args;
 
-    const expectedSnapshot = await findSnapshotByHash(expectedHash);
-    const actualSnapshot = await findSnapshotByHash(actualHash);
+    // package.jsonからバージョンを取得
+    const pkg = await Bun.file("./package.json").json();
+    const version = pkg.version;
 
-    if (!expectedSnapshot) {
-      console.error(`❌ Snapshot not found for hash: ${expectedHash}`);
+    // 現在のブランチを取得してサニタイズ
+    const branch = (await $`git rev-parse --abbrev-ref HEAD`.text())
+      .trim()
+      .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+    // スナップショットパスとGCSキーを直接構築
+    const expectedSnapshot = `${SNAPSHOTS_BASE_DIR}/${branch}/${version}/${expectedHash}`;
+    const actualSnapshot = `${SNAPSHOTS_BASE_DIR}/${branch}/${version}/${actualHash}`;
+    const expectedKey = `${branch}/${version}/${expectedHash}`;
+    const actualKey = `${branch}/${version}/${actualHash}`;
+
+    // 存在確認
+    if (!existsSync(expectedSnapshot)) {
+      console.error(`❌ Snapshot not found: ${expectedSnapshot}`);
       process.exit(1);
     }
 
-    if (!actualSnapshot) {
-      console.error(`❌ Snapshot not found for hash: ${actualHash}`);
+    if (!existsSync(actualSnapshot)) {
+      console.error(`❌ Snapshot not found: ${actualSnapshot}`);
       process.exit(1);
     }
-
-    const expectedKey = extractKeyFromPath(expectedSnapshot);
-    const actualKey = extractKeyFromPath(actualSnapshot);
 
     console.log(`ACTUAL_DIR=${actualSnapshot} EXPECTED_KEY=${expectedKey} ACTUAL_KEY=${actualKey} GOOGLE_APPLICATION_CREDENTIALS=${GCS_CREDENTIALS} bunx reg-suit run; open .reg/index.html`);
   } catch (error) {
