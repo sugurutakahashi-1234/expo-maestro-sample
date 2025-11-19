@@ -16,7 +16,8 @@
     "maestro:ios": "bun run statusbar:ios && DEVICE_ID=$(bun run device:ios) && maestro --device $DEVICE_ID test .maestro/app-flow.yaml",
     "maestro:android": "bun run statusbar:android && DEVICE_ID=$(bun run device:android) && maestro --device $DEVICE_ID test .maestro/app-flow.yaml",
     "maestro:all": "bun run maestro:ios && bun run maestro:android",
-    "vrt:snapshot": "sh -c 'VERSION=$(node -p \"require(./package.json).version\") && BRANCH=$(git rev-parse --abbrev-ref HEAD) && DATETIME=$(date +%Y%m%d-%H%M) && HASH=$(git rev-parse --short=12 HEAD) && SNAPSHOT_DIR=\".maestro/snapshots/${VERSION}_${BRANCH}_${DATETIME}_${HASH}\" && mkdir -p \"${SNAPSHOT_DIR}\" && cp -r .maestro/screenshots/. \"${SNAPSHOT_DIR}/\" && echo \"✅ Snapshot saved: ${SNAPSHOT_DIR}\"' sh",
+    "vrt:snapshot": "bun run scripts/vrt-snapshot.ts",
+    "vrt:snapshot:force": "bun run scripts/vrt-snapshot.ts --force",
     "vrt:list": "ls -lt .maestro/snapshots/ 2>/dev/null || echo 'No snapshots found'",
     "vrt:compare": "sh -c 'EXPECTED_DIR=\".maestro/snapshots/$1\" ACTUAL_DIR=\".maestro/snapshots/$2\" GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run && open .reg/index.html' sh",
     "lint": "expo lint",
@@ -54,6 +55,7 @@
     "react-native-web": "~0.21.0"
   },
   "devDependencies": {
+    "@types/bun": "^1.3.2",
     "@types/react": "catalog:",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
