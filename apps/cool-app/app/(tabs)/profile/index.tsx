@@ -11,7 +11,7 @@ export default function ProfileScreen() {
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>プロフィール</Text>
-          <Text style={styles.subtitle}>ようこそ、{username}さん!</Text>
+          <Text style={styles.subtitle}>こんにちは、{username}さん 👋</Text>
         </View>
 
         <View style={styles.card}>
@@ -24,38 +24,38 @@ export default function ProfileScreen() {
 
             <View style={styles.row}>
               <Text style={styles.label}>メール:</Text>
-              <Text style={styles.value}>developer@coolapp.com</Text>
+              <Text style={styles.value}>dev@awesome-app.com</Text>
             </View>
 
             <View style={styles.row}>
               <Text style={styles.label}>登録日:</Text>
-              <Text style={styles.value}>2025年1月</Text>
+              <Text style={styles.value}>2025年11月</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>このタブについて</Text>
+          <Text style={styles.cardTitle}>機能紹介</Text>
           <View style={styles.cardContent}>
             <Text style={styles.infoText}>
-              これはシンプルなプロフィールタブ画面です。以下を示しています:
+              このプロフィール画面では以下の機能を確認できます:
             </Text>
-            <Text style={styles.bullet}>• タブナビゲーション（3つのタブのうちの1つ）</Text>
-            <Text style={styles.bullet}>• ルートパラメータの読み取り</Text>
-            <Text style={styles.bullet}>• 基本的なユーザー情報の表示</Text>
+            <Text style={styles.bullet}>• スムーズなタブ間ナビゲーション</Text>
+            <Text style={styles.bullet}>• 動的なパラメータ受け渡し</Text>
+            <Text style={styles.bullet}>• レスポンシブなUI表示</Text>
           </View>
         </View>
 
         <View style={styles.highlightBox}>
-          <Text style={styles.highlightTitle}>📱 ナビゲーションパターン</Text>
+          <Text style={styles.highlightTitle}>📱 アーキテクチャ</Text>
           <Text style={styles.highlightText}>
-            この画面はTabsナビゲーターの一部です。タブバーに常に表示され、
-            プロフィールタブをタップすることでいつでもアクセスできます。
+            Expo Routerのタブベースナビゲーションを採用。
+            画面間の移動がスムーズで、常に快適な操作性を提供します。
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>アプリ情報</Text>
+          <Text style={styles.sectionTitle}>詳細情報</Text>
           <Pressable
             style={styles.licenseButton}
             onPress={() => router.push("/license")}
@@ -72,7 +72,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#faf8ff",
   },
   content: {
     padding: 20,
@@ -86,11 +86,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#333",
+    color: "#6b21a8",
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
+    color: "#7c3aed",
   },
   card: {
     backgroundColor: "#fff",
@@ -134,22 +134,22 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   highlightBox: {
-    backgroundColor: "#e8f5e9",
+    backgroundColor: "#f3e8ff",
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#a5d6a7",
+    borderColor: "#d8b4fe",
   },
   highlightTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#2e7d32",
+    color: "#7c3aed",
     marginBottom: 8,
   },
   highlightText: {
     fontSize: 14,
     lineHeight: 20,
-    color: "#388e3c",
+    color: "#8b5cf6",
   },
   section: {
     gap: 12,
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   licenseButtonText: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#007AFF",
+    color: "#8b5cf6",
   },
   arrow: {
     fontSize: 24,
