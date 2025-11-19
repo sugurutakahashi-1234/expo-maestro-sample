@@ -1,7 +1,6 @@
 import { $ } from "bun";
 
 const SNAPSHOTS_BASE_DIR = ".maestro/snapshots";
-const GCS_CREDENTIALS = "./vrt-sample-4dde33b657e4.json";
 
 // コマンドライン引数を取得
 const args = process.argv.slice(2);
@@ -28,29 +27,29 @@ async function findSnapshotByHash(hash: string): Promise<string | null> {
 (async () => {
   try {
     if (args.length !== 2) {
-      console.error("Usage: bun run vrt:find <hash1> <hash2>");
-      console.error("Example: bun run vrt:find 041e30c f6e97f4");
+      console.error("Usage: bun run vrt:find:local <expected-hash> <actual-hash>");
+      console.error("Example: bun run vrt:find:local 041e30c f6e97f4");
       process.exit(1);
     }
 
-    const [input1, input2] = args;
-    const hash1 = extractHash(input1);
-    const hash2 = extractHash(input2);
+    const [expectedInput, actualInput] = args;
+    const expectedHash = extractHash(expectedInput);
+    const actualHash = extractHash(actualInput);
 
-    const snapshot1 = await findSnapshotByHash(hash1);
-    const snapshot2 = await findSnapshotByHash(hash2);
+    const expectedSnapshot = await findSnapshotByHash(expectedHash);
+    const actualSnapshot = await findSnapshotByHash(actualHash);
 
-    if (!snapshot1) {
-      console.error(`❌ Snapshot not found for hash: ${hash1}`);
+    if (!expectedSnapshot) {
+      console.error(`❌ Snapshot not found for hash: ${expectedHash}`);
       process.exit(1);
     }
 
-    if (!snapshot2) {
-      console.error(`❌ Snapshot not found for hash: ${hash2}`);
+    if (!actualSnapshot) {
+      console.error(`❌ Snapshot not found for hash: ${actualHash}`);
       process.exit(1);
     }
 
-    console.log(`EXPECTED_DIR=${snapshot1} ACTUAL_DIR=${snapshot2} GOOGLE_APPLICATION_CREDENTIALS=${GCS_CREDENTIALS} bun run vrt:compare`);
+    console.log(`bunx reg-cli ${actualSnapshot} ${expectedSnapshot} .reg/local/diff -R .reg/local/index.html -J .reg/local/reg.json -T 0.001; open .reg/local/index.html`);
   } catch (error) {
     console.error("❌ Error:", error);
     process.exit(1);
