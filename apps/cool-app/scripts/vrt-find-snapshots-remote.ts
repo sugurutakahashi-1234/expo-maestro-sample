@@ -10,12 +10,12 @@ const args = process.argv.slice(2);
 (async () => {
   try {
     if (args.length !== 2) {
-      console.error("Usage: bun run vrt:find:remote <expected-hash> <actual-hash>");
-      console.error("Example: bun run vrt:find:remote 041e30c f6e97f4");
+      console.error("Usage: bun run vrt:find:remote <actual-hash> <expected-hash>");
+      console.error("Example: bun run vrt:find:remote f6e97f4 041e30c");
       process.exit(1);
     }
 
-    const [expectedHash, actualHash] = args;
+    const [actualHash, expectedHash] = args;
 
     // package.jsonからバージョンを取得
     const pkg = await Bun.file("./package.json").json();

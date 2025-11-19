@@ -18,12 +18,12 @@ async function findSnapshotByHash(hash: string): Promise<string | null> {
 (async () => {
   try {
     if (args.length !== 2) {
-      console.error("Usage: bun run vrt:find:local <expected-hash> <actual-hash>");
-      console.error("Example: bun run vrt:find:local 041e30c f6e97f4");
+      console.error("Usage: bun run vrt:find:local <actual-hash> <expected-hash>");
+      console.error("Example: bun run vrt:find:local f6e97f4 041e30c");
       process.exit(1);
     }
 
-    const [expectedHash, actualHash] = args;
+    const [actualHash, expectedHash] = args;
 
     const expectedSnapshot = await findSnapshotByHash(expectedHash);
     const actualSnapshot = await findSnapshotByHash(actualHash);

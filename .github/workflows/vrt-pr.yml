@@ -51,7 +51,8 @@ jobs:
 
           # パス直接構築により、GCS検索不要で比較可能
           # TODO: --ci フラグで認証情報を環境変数から読み込む対応が必要
-          COMMAND=$(bun run vrt:find:remote $BASE_HASH $PR_HASH)
+          # PR_HASH が actual (新しい), BASE_HASH が expected (古い)
+          COMMAND=$(bun run vrt:find:remote $PR_HASH $BASE_HASH)
           echo "Comparing: $COMMAND"
           eval "$COMMAND"
 

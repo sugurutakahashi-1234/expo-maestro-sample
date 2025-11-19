@@ -48,9 +48,10 @@ bun run vrt:snapshot:local
 bun run vrt:list
 
 # 4. ハッシュから比較コマンド生成
-bun run vrt:find:local abc123 def456
+bun run vrt:find:local def456 abc123
 
 # 5. 出力されたコマンドをコピー&実行
+# actual (newer: def456) vs expected (older: abc123)
 npx reg-cli .maestro/snapshots/feature/... .maestro/snapshots/main/... .reg/local/diff -R .reg/local/index.html -J .reg/local/reg.json -T 0.001; open .reg/local/index.html
 ```
 
@@ -69,8 +70,8 @@ git checkout release/v1.1.0
 bun run maestro:ios
 bun run vrt:snapshot:local
 
-# 3. 比較
-bun run vrt:find:local <main-hash> <release-hash>
+# 3. 比較 (release が actual, main が expected)
+bun run vrt:find:local <release-hash> <main-hash>
 # → 出力されたコマンドを実行
 ```
 
@@ -87,8 +88,8 @@ git checkout feature/new-ui
 bun run maestro:ios
 bun run vrt:snapshot:local
 
-# 3. 比較
-bun run vrt:find:local <main-hash> <feature-hash>
+# 3. 比較 (feature が actual, main が expected)
+bun run vrt:find:local <feature-hash> <main-hash>
 ```
 
 #### 例3: 強制スナップショット作成
@@ -151,7 +152,7 @@ bun run vrt:publish:remote <hash>
 ACTUAL_DIR=... ACTUAL_KEY=... GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run
 
 # 5. ハッシュから比較コマンド生成
-bun run vrt:find:remote <expected-hash> <actual-hash>
+bun run vrt:find:remote <actual-hash> <expected-hash>
 # → EXPECTED_KEYとACTUAL_KEYを指定してreg-suit run
 
 # 6. 出力されたコマンドをコピー&実行
@@ -186,8 +187,8 @@ bun run vrt:publish:remote f6e97f4
 # → ACTUAL_DIR=... ACTUAL_KEY=... npx reg-suit run
 # → コマンド実行してGCSに公開（EXPECTED_KEYなし）
 
-# mainとの比較
-bun run vrt:find:remote 041e30c f6e97f4
+# mainとの比較 (f6e97f4 が actual, 041e30c が expected)
+bun run vrt:find:remote f6e97f4 041e30c
 # → コマンド出力 → 実行
 ```
 
@@ -287,8 +288,8 @@ bun run vrt:snapshot:local:force
 # スナップショット一覧を確認
 bun run vrt:list
 
-# 正しいハッシュを使用
-bun run vrt:find:local 041e30c f6e97f4
+# 正しいハッシュを使用 (f6e97f4 が actual, 041e30c が expected)
+bun run vrt:find:local f6e97f4 041e30c
 ```
 
 ---
