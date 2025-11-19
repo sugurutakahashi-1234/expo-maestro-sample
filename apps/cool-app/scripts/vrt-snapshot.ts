@@ -33,8 +33,7 @@ try {
   const hash = (await $`git rev-parse --short HEAD`.text()).trim();
 
   // スナップショットディレクトリ名を生成
-  const snapshotDir = `${SNAPSHOTS_BASE_DIR}/${version}_${branch}_${datetime}_${hash}`;
-
+  const snapshotDir = `${SNAPSHOTS_BASE_DIR}/${branch}/${version}_${datetime}_${hash}`;
   // スクリーンショットディレクトリの存在確認
   if (!existsSync(SCREENSHOTS_DIR)) {
     console.error(`❌ Error: Screenshots directory not found: ${SCREENSHOTS_DIR}`);
