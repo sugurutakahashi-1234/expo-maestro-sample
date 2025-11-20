@@ -331,7 +331,7 @@ find .maestro/snapshots -type d -maxdepth 3
 
 reg-suitの設定ファイル。プロジェクトで共有される設定です。
 
-```json
+```js
 {
   "core": {
     "workingDir": ".reg",              // reg-suitの作業ディレクトリ
