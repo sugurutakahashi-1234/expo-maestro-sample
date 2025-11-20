@@ -27,8 +27,6 @@ jobs:
         working-directory: apps/cool-app
         run: bun install
 
-      # Maestroは事前に実行済み（.maestro/screenshots が存在する前提）
-
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:

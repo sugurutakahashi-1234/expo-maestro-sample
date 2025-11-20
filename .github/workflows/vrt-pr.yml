@@ -37,13 +37,13 @@ jobs:
       - name: Publish PR snapshot to GCS (2 keys)
         working-directory: apps/cool-app
         run: |
-          # コマンド1: ハッシュのみのキー（比較用）
+          # ハッシュのみのキー（比較用）
           PR_HASH=$(git rev-parse --short=7 HEAD)
           echo "🔍 Debug Info (Command 1)"
           echo "PR_HASH: $PR_HASH"
           rm -rf .reg && ACTUAL_KEY=$PR_HASH bunx reg-suit run
 
-          # コマンド2: フルパスのキー（履歴保存用）
+          # フルパスのキー（履歴保存用）
           BRANCH="${{ github.head_ref }}"
           BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           VERSION=$(jq -r '.version' package.json)
@@ -55,9 +55,12 @@ jobs:
           echo "FULL_KEY: $FULL_KEY"
           rm -rf .reg && ACTUAL_KEY=$FULL_KEY bunx reg-suit run
 
+      # GitHub ActionsのPRイベントではdetached HEAD状態でチェックアウトされるため、
+      # reg-notify-github-pluginがブランチ名を検出できず、PRコメントを投稿できない。
+      # このステップでブランチにチェックアウトすることで、プラグインが正常に動作する。
       - name: Workaround for detached HEAD
         run: |
-          git checkout ${{ github.head_ref }} || git checkout -b ${{ github.head_ref }}
+          git checkout ${{ github.head_ref }}
 
       - name: Compare with baseline
         working-directory: apps/cool-app
@@ -83,7 +86,19 @@ jobs:
           ls -lah .reg/
           echo ""
           echo "📄 VRT comparison result (out.json):"
-          cat .reg/out.json
+          jq '.' .reg/out.json
+
+      - name: Verify .reg directory before upload
+        if: always()
+        run: |
+          echo "Current directory (repo root):"
+          pwd
+          echo ""
+          echo "Checking from repo root (upload-artifact のパス):"
+          ls -la apps/cool-app/.reg/ || echo "❌ apps/cool-app/.reg/ not found from root"
+          echo ""
+          echo "Checking from apps/cool-app directory:"
+          cd apps/cool-app && ls -la .reg/ || echo "❌ .reg/ not found in apps/cool-app"
 
       - name: Upload VRT report
         if: always()
