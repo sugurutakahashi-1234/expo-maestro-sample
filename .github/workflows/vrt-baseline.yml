@@ -39,6 +39,8 @@ jobs:
         run: |
           # コマンド1: ハッシュのみのキー（比較用）
           HASH=$(git rev-parse --short=7 HEAD)
+          echo "🔍 Debug Info (Command 1)"
+          echo "HASH: $HASH"
           rm -rf .reg && ACTUAL_KEY=$HASH bunx reg-suit run
 
           # コマンド2: フルパスのキー（履歴保存用）
@@ -46,6 +48,11 @@ jobs:
           BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           VERSION=$(jq -r '.version' package.json)
           FULL_KEY="$BRANCH_SAFE/$VERSION/$HASH"
+          echo "🔍 Debug Info (Command 2)"
+          echo "BRANCH: $BRANCH"
+          echo "BRANCH_SAFE: $BRANCH_SAFE"
+          echo "VERSION: $VERSION"
+          echo "FULL_KEY: $FULL_KEY"
           rm -rf .reg && ACTUAL_KEY=$FULL_KEY bunx reg-suit run
 
       - name: Summary
