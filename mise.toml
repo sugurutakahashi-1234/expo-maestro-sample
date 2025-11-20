@@ -1,3 +1,5 @@
 [tools]
 java = "temurin-21"
 maestro = "latest"
+bun = "latest"
+node = "latest"
