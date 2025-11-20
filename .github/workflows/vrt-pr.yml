@@ -6,7 +6,7 @@ on:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read        # リポジトリ読み取り
+  contents: write       # peaceiris/actions-gh-pages が gh-pages にpush
   pull-requests: write  # PRコメント投稿
   statuses: write       # コミットステータス設定
   pages: write          # GitHub Pages への書き込み
@@ -108,6 +108,26 @@ jobs:
           echo "📄 VRT comparison result (out.json):"
           jq '.' .reg/out.json
 
+      - name: Set GitHub Pages path
+        id: pages-path
+        run: |
+          PR_HASH=$(git rev-parse --short=7 HEAD)
+          PR_VERSION=$(jq -r '.version' apps/cool-app/package.json)
+          PR_BRANCH="${{ github.head_ref }}"
+          PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          PAGES_PATH="vrt-sample/$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH"
+          echo "path=$PAGES_PATH" >> $GITHUB_OUTPUT
+          echo "📍 GitHub Pages path: $PAGES_PATH"
+
+      - name: Deploy to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: apps/cool-app/.reg
+          destination_dir: ${{ steps.pages-path.outputs.path }}
+          keep_files: true
+
       - name: Upload VRT report
         if: always()
         uses: actions/upload-artifact@v5
@@ -117,19 +137,20 @@ jobs:
           retention-days: 30
           include-hidden-files: true  # .reg/ は隠しディレクトリのため必須
 
-      # GitHub Pages へのデプロイ（実験的機能）
-      # 注意: デプロイごとにサイト全体が上書きされるため、最新のVRTレポートのみが表示される
-      # 複数PRの履歴を残したい場合は peaceiris/actions-gh-pages の使用を検討
-      - name: Upload Pages Artifact
+      - name: Comment PR with GitHub Pages URL
         if: always()
-        uses: actions/upload-pages-artifact@v4
+        uses: marocchino/sticky-pull-request-comment@v2
         with:
-          path: apps/cool-app/.reg
+          header: vrt-report
+          message: |
+            ## 📊 VRT Report (GitHub Pages)
 
-      - name: Deploy to GitHub Pages
-        if: always()
-        id: deployment
-        uses: actions/deploy-pages@v4
+            🔗 **View Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/
+
+            このレポートはPRマージ後も永続的にアクセス可能です。
+
+            ---
+            *Powered by reg-suit + GitHub Pages*
 
       - name: Summary
         if: always()

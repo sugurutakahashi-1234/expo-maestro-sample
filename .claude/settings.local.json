@@ -66,7 +66,8 @@
       "Bash(GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run:*)",
       "Bash(GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx:*)",
       "Bash(sh -c 'echo \"\"0=$0, 1=$1, 2=$2\"\"' arg1 arg2 arg3)",
-      "Bash(sh -c 'echo \"\"EXPECTED_DIR=$0\"\"' \".maestro/snapshots/main/1.0.0_2025-11-19_1142_041e30c\")"
+      "Bash(sh -c 'echo \"\"EXPECTED_DIR=$0\"\"' \".maestro/snapshots/main/1.0.0_2025-11-19_1142_041e30c\")",
+      "WebFetch(domain:blog.mmmcorp.co.jp)"
     ],
     "deny": [],
     "ask": []
