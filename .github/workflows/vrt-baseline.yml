@@ -7,8 +7,7 @@ on:
       - main
 
 permissions:
-  contents: read   # リポジトリ読み取り
-  statuses: write  # コミットステータス設定
+  statuses: write  # reg-notify-github-plugin がコミットステータスを設定
 
 jobs:
   update-baseline:
@@ -27,8 +26,6 @@ jobs:
         working-directory: apps/cool-app
         run: bun install
 
-      # Maestroは事前に実行済み（.maestro/screenshots が存在する前提）
-
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
@@ -39,6 +36,8 @@ jobs:
         run: |
           # コマンド1: ハッシュのみのキー（比較用）
           HASH=$(git rev-parse --short=7 HEAD)
+          echo "🔍 Debug Info (Command 1)"
+          echo "HASH: $HASH"
           rm -rf .reg && ACTUAL_KEY=$HASH bunx reg-suit run
 
           # コマンド2: フルパスのキー（履歴保存用）
@@ -46,8 +45,22 @@ jobs:
           BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           VERSION=$(jq -r '.version' package.json)
           FULL_KEY="$BRANCH_SAFE/$VERSION/$HASH"
+          echo "🔍 Debug Info (Command 2)"
+          echo "BRANCH: $BRANCH"
+          echo "BRANCH_SAFE: $BRANCH_SAFE"
+          echo "VERSION: $VERSION"
+          echo "FULL_KEY: $FULL_KEY"
           rm -rf .reg && ACTUAL_KEY=$FULL_KEY bunx reg-suit run
 
       - name: Summary
+        if: always()
         run: |
-          echo "✅ VRT baseline updated for commit $(git rev-parse --short=7 HEAD)"
+          HASH=$(git rev-parse --short=7 HEAD)
+          VERSION=$(jq -r '.version' apps/cool-app/package.json)
+          BRANCH="${{ github.ref_name }}"
+          echo "## VRT Baseline Update" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: $BRANCH" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: $HASH" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ ベースラインが GCS に保存されました。" >> $GITHUB_STEP_SUMMARY

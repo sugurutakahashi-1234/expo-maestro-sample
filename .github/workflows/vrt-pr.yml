@@ -6,9 +6,11 @@ on:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read        # リポジトリ読み取り
+  contents: write       # peaceiris/actions-gh-pages が gh-pages にpush
   pull-requests: write  # PRコメント投稿
   statuses: write       # コミットステータス設定
+  pages: write          # GitHub Pages への書き込み
+  id-token: write       # OIDC トークン検証用
 
 jobs:
   vrt-compare:
@@ -37,31 +39,100 @@ jobs:
       - name: Publish PR snapshot to GCS (2 keys)
         working-directory: apps/cool-app
         run: |
-          # コマンド1: ハッシュのみのキー（比較用）
+          # ハッシュのみのキー（比較用）
           PR_HASH=$(git rev-parse --short=7 HEAD)
+          echo "🔍 Debug Info (Command 1)"
+          echo "PR_HASH: $PR_HASH"
           rm -rf .reg && ACTUAL_KEY=$PR_HASH bunx reg-suit run
 
-          # コマンド2: フルパスのキー（履歴保存用）
+          # フルパスのキー（履歴保存用）
           BRANCH="${{ github.head_ref }}"
           BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           VERSION=$(jq -r '.version' package.json)
           FULL_KEY="$BRANCH_SAFE/$VERSION/$PR_HASH"
+          echo "🔍 Debug Info (Command 2)"
+          echo "BRANCH: $BRANCH"
+          echo "BRANCH_SAFE: $BRANCH_SAFE"
+          echo "VERSION: $VERSION"
+          echo "FULL_KEY: $FULL_KEY"
           rm -rf .reg && ACTUAL_KEY=$FULL_KEY bunx reg-suit run
 
+      # GitHub ActionsのPRイベントではdetached HEAD状態でチェックアウトされるため、
+      # reg-notify-github-pluginがブランチ名を検出できず、PRコメントを投稿できない。
+      # このステップでブランチにチェックアウトすることで、プラグインが正常に動作する。
+      - name: Workaround for detached HEAD
+        run: |
+          git checkout ${{ github.head_ref }}
+
       - name: Compare with baseline
+        id: comparison-keys
         working-directory: apps/cool-app
         run: |
-          # ハッシュのみのキーで比較（高速）
+          # フルパスのキーで比較
+          # ベース側（EXPECTED）の変数を構築
           BASE_HASH=$(git rev-parse --short=7 ${{ github.event.pull_request.base.sha }})
-          PR_HASH=$(git rev-parse --short=7 HEAD)
+          BASE_VERSION=$(git show ${{ github.event.pull_request.base.sha }}:apps/cool-app/package.json | jq -r '.version')
+          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          BASE_BRANCH_SAFE=$(echo "$BASE_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          EXPECTED_KEY="$BASE_BRANCH_SAFE/$BASE_VERSION/$BASE_HASH"
 
-          echo "Base commit: $BASE_HASH"
-          echo "PR commit: $PR_HASH"
+          # PR側（ACTUAL）の変数を構築
+          PR_HASH=$(git rev-parse --short=7 HEAD)
+          PR_VERSION=$(jq -r '.version' package.json)
+          PR_BRANCH="${{ github.head_ref }}"
+          PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          ACTUAL_KEY="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH"
+
+          echo "🔍 VRT Comparison Keys"
+          echo "EXPECTED_KEY: $EXPECTED_KEY"
+          echo "ACTUAL_KEY: $ACTUAL_KEY"
           echo ""
 
-          # PR_HASH が actual (新しい), BASE_HASH が expected (古い)
-          # ハッシュのみのキーを使用
-          rm -rf .reg && EXPECTED_KEY=$BASE_HASH ACTUAL_KEY=$PR_HASH bunx reg-suit run
+          # Output for PR comment
+          echo "base-branch=$BASE_BRANCH" >> $GITHUB_OUTPUT
+          echo "base-branch-safe=$BASE_BRANCH_SAFE" >> $GITHUB_OUTPUT
+          echo "base-version=$BASE_VERSION" >> $GITHUB_OUTPUT
+          echo "base-hash=$BASE_HASH" >> $GITHUB_OUTPUT
+          echo "pr-branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+          echo "pr-branch-safe=$PR_BRANCH_SAFE" >> $GITHUB_OUTPUT
+          echo "pr-version=$PR_VERSION" >> $GITHUB_OUTPUT
+          echo "pr-hash=$PR_HASH" >> $GITHUB_OUTPUT
+          echo "expected-key=$EXPECTED_KEY" >> $GITHUB_OUTPUT
+          echo "actual-key=$ACTUAL_KEY" >> $GITHUB_OUTPUT
+
+          # フルパスのキーを使用して比較
+          rm -rf .reg && EXPECTED_KEY=$EXPECTED_KEY ACTUAL_KEY=$ACTUAL_KEY bunx reg-suit run
+
+          # シンプルバージョン（ハッシュのみで比較する場合は以下を使用）
+          # rm -rf .reg && EXPECTED_KEY=$BASE_HASH ACTUAL_KEY=$PR_HASH bunx reg-suit run
+
+          # 比較結果の詳細を出力
+          echo ""
+          echo "📁 .reg directory structure:"
+          ls -lah .reg/
+          echo ""
+          echo "📄 VRT comparison result (out.json):"
+          jq '.' .reg/out.json
+
+      - name: Set GitHub Pages path
+        id: pages-path
+        run: |
+          PR_HASH=$(git rev-parse --short=7 HEAD)
+          PR_VERSION=$(jq -r '.version' apps/cool-app/package.json)
+          PR_BRANCH="${{ github.head_ref }}"
+          PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          PAGES_PATH="vrt-sample/$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH"
+          echo "path=$PAGES_PATH" >> $GITHUB_OUTPUT
+          echo "📍 GitHub Pages path: $PAGES_PATH"
+
+      - name: Deploy to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: apps/cool-app/.reg
+          destination_dir: ${{ steps.pages-path.outputs.path }}
+          keep_files: true
 
       - name: Upload VRT report
         if: always()
@@ -70,12 +141,57 @@ jobs:
           name: vrt-report
           path: apps/cool-app/.reg/
           retention-days: 30
+          include-hidden-files: true  # .reg/ は隠しディレクトリのため必須
+
+      - name: Comment PR with VRT access methods
+        if: always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: vrt-report
+          message: |
+            ## 📊 VRT Report
+
+            ### 🌐 オンライン表示（GitHub Pages）
+
+            🔗 **View Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/
+
+            ⏱️ このレポートは **30日間保存** されます（その後自動削除）。
+
+            ---
+
+            ### 💻 ローカルでレポートを表示
+
+            **初回のみ: gcloud認証**
+            ```bash
+            gcloud auth login
+            ```
+
+            **比較レポートをダウンロード:**
+            ```bash
+            cd apps/cool-app
+            rm -rf .reg
+            mkdir -p .reg
+            gsutil -m cp -r "gs://vrt-sample/${{ steps.comparison-keys.outputs.actual-key }}" .reg
+            open .reg/${{ steps.comparison-keys.outputs.pr-hash }}/index.html
+            ```
+
+            ---
+
+            ### 📊 比較情報
+
+            - **Base**: `${{ steps.comparison-keys.outputs.expected-key }}`
+            - **PR**: `${{ steps.comparison-keys.outputs.actual-key }}`
+
+            ---
+            *Powered by reg-suit + GitHub Pages*
 
       - name: Summary
         if: always()
         run: |
+          BASE_HASH=$(git rev-parse --short=7 ${{ github.event.pull_request.base.sha }})
+          PR_HASH=$(git rev-parse --short=7 HEAD)
           echo "## VRT Comparison" >> $GITHUB_STEP_SUMMARY
-          echo "- Base: ${{ github.event.pull_request.base.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "- PR: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Base: $BASE_HASH" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: $PR_HASH" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ VRT比較が完了しました。詳細はアーティファクトのレポートを確認してください。" >> $GITHUB_STEP_SUMMARY
