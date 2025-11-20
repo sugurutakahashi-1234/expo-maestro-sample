@@ -44,9 +44,6 @@ bun run maestro:ios
 bun run vrt:snapshot:local
 # → .maestro/snapshots/{branch}/{version}/{hash}/
 
-# 3. スナップショット一覧確認
-bun run vrt:list
-
 # 4. ハッシュから比較コマンド生成
 bun run vrt:find:local def456 abc123
 
@@ -114,7 +111,19 @@ bun run vrt:snapshot:local:force
 
 ## リモートワークフロー (CI/CD用)
 
-GitHub Actionsでの自動VRT実行とチーム共有用。ローカルと同じ命名規則でGCSに保存。
+GitHub ActionsでのVRT自動実行とチーム共有用。GCSに2つの形式でスナップショットを保存します。
+
+### 2重パブリッシュの仕組み
+
+スナップショットは2つのGCSキーで保存されます：
+
+1. **ハッシュのみ (`{hash}/`)**: CI/CD比較用
+   - 例: `041e30c/`, `f6e97f4/`
+   - 高速検索可能
+
+2. **フルパス (`{branch}/{version}/{hash}/`)**: 履歴保存用
+   - 例: `main/1.0.0/041e30c/`, `feature_new-ui/1.0.0/f6e97f4/`
+   - ブランチ・バージョン別に整理され、過去参照しやすい
 
 ### 初回セットアップ
 
@@ -133,63 +142,61 @@ cp vrt-gcs-credentials.json.example vrt-gcs-credentials.json
 
 **重要**: `vrt-gcs-credentials.json` は `.gitignore` で除外されています。絶対にコミットしないでください。
 
-### 基本コマンド
+### 基本コマンド（ローカル手動実行用）
 
 ```bash
 # 1. Maestroテスト実行 → スクリーンショット取得
 bun run maestro:ios
 
-# 2. ローカルスナップショット作成
-bun run vrt:snapshot:local
-# → .maestro/snapshots/{branch}/{version}/{hash}/
+# 2. パブリッシュコマンドを生成（マニュアル実行用）
+bun run vrt:publish:manual
+# → 引数なし（.maestro/screenshots を自動検出）
+# → コマンド1: ハッシュのみのキー
+# → コマンド2: フルパスのキー
 
-# 3. GCSにベースライン公開（初回のみ）
-bun run vrt:publish:remote <hash>
-# → EXPECTED_KEYなしでreg-suit runを実行
-# → すべての画像が"new items"としてGCSに保存
-
-# 4. 出力されたコマンドをコピー&実行
-ACTUAL_DIR=... ACTUAL_KEY=... GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run
-
-# 5. ハッシュから比較コマンド生成
-bun run vrt:find:remote <actual-hash> <expected-hash>
-# → EXPECTED_KEYとACTUAL_KEYを指定してreg-suit run
-
-# 6. 出力されたコマンドをコピー&実行
-ACTUAL_DIR=.maestro/snapshots/feature/... EXPECTED_KEY=main/... ACTUAL_KEY=feature/... GOOGLE_APPLICATION_CREDENTIALS=./vrt-sample-4dde33b657e4.json npx reg-suit run; open .reg/index.html
+# 3. 出力された2つのコマンドを順次実行
 ```
+
+**注**: `vrt:publish:manual` はコマンド生成のみを行います。実際のパブリッシュは出力されたコマンドをコピー&ペーストして実行してください。CI/CDではこのスクリプトを使用せず、ワークフロー内で直接コマンドを実行します。
 
 ### 実践例
 
-#### 例1: mainブランチでベースライン作成
+#### mainブランチでベースライン作成
 
 ```bash
 git checkout main && git pull
 bun run maestro:ios
-bun run vrt:snapshot:local
-# → .maestro/snapshots/main/1.0.0/041e30c/
 
-bun run vrt:publish:remote 041e30c
-# → ACTUAL_DIR=... ACTUAL_KEY=... npx reg-suit run
+bun run vrt:publish:manual
+# GCSに2つのキーでパブリッシュ:
+# 1. ハッシュのみ（比較用）: 041e30c
+# 2. フルパス（保存用）: main/1.0.0/041e30c
+#
+# コマンド1: ハッシュのみのキーでパブリッシュ
+# rm -rf .reg && ACTUAL_KEY=041e30c ...
+#
+# コマンド2: フルパスのキーでパブリッシュ
+# rm -rf .reg && ACTUAL_KEY=main/1.0.0/041e30c ...
 
-# コマンドを実行してGCSに公開（EXPECTED_KEYなしなので"new items"として保存）
+# → 2つのコマンドをコピー&ペーストして実行
 ```
 
-#### 例2: featureブランチで比較
+### GCS構造
 
-```bash
-git checkout feature/new-ui
-bun run maestro:ios
-bun run vrt:snapshot:local
-# → .maestro/snapshots/feature_new-ui/1.0.0/f6e97f4/
-
-bun run vrt:publish:remote f6e97f4
-# → ACTUAL_DIR=... ACTUAL_KEY=... npx reg-suit run
-# → コマンド実行してGCSに公開（EXPECTED_KEYなし）
-
-# mainとの比較 (f6e97f4 が actual, 041e30c が expected)
-bun run vrt:find:remote f6e97f4 041e30c
-# → コマンド出力 → 実行
+```
+vrt-sample/
+├── 041e30c/                    # ハッシュのみ（比較用）
+│   └── ios/
+│       ├── home-tab.png
+│       └── ...
+├── f6e97f4/
+│   └── ios/...
+└── main/                       # フルパス（履歴保存用）
+    └── 1.0.0/
+        ├── 041e30c/
+        │   └── ios/...
+        └── f6e97f4/
+            └── ios/...
 ```
 
 ### GCS設定
@@ -198,7 +205,7 @@ bun run vrt:find:remote f6e97f4 041e30c
 - **リージョン**: `asia-northeast1`
 - **認証ファイル**: `vrt-gcs-credentials.json` (gitignore済み)
 - **差分閾値**: 0.1% (thresholdRate: 0.001)
-- **命名規則**: `{branch}/{version}/{hash}` (ローカルと同じ)
+- **2重パブリッシュ**: ハッシュのみ + フルパス
 
 ---
 
@@ -285,9 +292,6 @@ bun run vrt:snapshot:local:force
 
 **解決方法:**
 ```bash
-# スナップショット一覧を確認
-bun run vrt:list
-
 # 正しいハッシュを使用 (f6e97f4 が actual, 041e30c が expected)
 bun run vrt:find:local f6e97f4 041e30c
 ```
@@ -344,28 +348,111 @@ jobs:
 1. **Maestro実行不可**: CI環境ではMaestroを実行できないため、`.maestro/screenshots` を事前にコミット必要
 2. **スナップショット作成**: CI環境では `--force` フラグで強制作成
 
-### TODO項目
+### GitHub Secrets設定（必須）
 
-以下の機能は未実装です：
+CI/CD運用には以下のSecretを設定する必要があります。
 
-- [ ] **GCS認証情報の環境変数対応**
-  - 現在は `vrt-gcs-credentials.json` がローカルにある前提
-  - CI環境では `GCS_SERVICE_ACCOUNT_JSON` からJSONを読み込む必要がある
-  - GitHub Secretsの設定手順が必要
+#### 設定手順
 
-### GitHub Secrets設定 (TODO)
+1. **GCPサービスアカウントキーの取得**
+   - [GCPコンソール](https://console.cloud.google.com/iam-admin/serviceaccounts)でサービスアカウントを作成
+   - JSONキーをダウンロード
 
-CI/CD運用には以下のSecretが必要です（未実装）：
+2. **GitHub Secretsに登録**
+   - GitHubリポジトリの `Settings > Secrets and variables > Actions` を開く
+   - `New repository secret` をクリック
+   - **Name**: `VRT_GCS_CREDENTIALS_JSON`
+   - **Secret**: ダウンロードしたJSONファイルの内容全体をペースト
 
-```bash
-# GitHub リポジトリの Settings > Secrets and variables > Actions
-
-GCS_SERVICE_ACCOUNT_JSON='{
+#### Secretの内容例
+```json
+{
   "type": "service_account",
-  "project_id": "...",
-  ...
-}'
+  "project_id": "your-project-id",
+  "private_key_id": "...",
+  "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
+  "client_email": "vrt-service-account@your-project.iam.gserviceaccount.com",
+  "client_id": "...",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "..."
+}
 ```
+
+#### CI/CDでの認証フロー
+
+ワークフロー内で Google 公式アクション `google-github-actions/auth@v3` を使用します：
+
+```yaml
+- name: Authenticate to Google Cloud
+  uses: google-github-actions/auth@v3
+  with:
+    credentials_json: '${{ secrets.VRT_GCS_CREDENTIALS_JSON }}'
+
+- name: Publish to GCS
+  run: |
+    bunx reg-suit run
+```
+
+**利点**:
+- ✅ **簡潔**: 一時ファイル作成が不要
+- ✅ **自動設定**: `GOOGLE_APPLICATION_CREDENTIALS` 環境変数が自動で設定される
+- ✅ **自動クリーンアップ**: ジョブ終了時に認証情報が自動削除される
+- ✅ **Google公式**: メンテナンスされており信頼性が高い
+
+**重要**:
+- 認証情報ファイル（`vrt-gcs-credentials.json`）をリポジトリにコミットしないでください
+- ローカル開発では `vrt-gcs-credentials.json` を使用し、CI/CDではGitHub Secretsを使用します
+
+---
+
+## PRコメント機能
+
+`reg-notify-github-plugin` を使用して、VRT結果を自動的にPRにコメントします。
+
+### 機能
+
+- ✅ **PRに差分レポートを自動コメント**: 比較結果をPRコメントとして投稿
+- ✅ **コミットステータス設定**: 差分がある場合はコミットステータスをfailに設定
+- ✅ **既存コメントを更新**: 重複コメントを防止し、既存コメントを更新
+- ✅ **サマリーテーブル表示**: 変更・新規・合格アイテム数を一覧表示
+
+### 設定
+
+`regconfig.json` に設定済み:
+
+```json
+{
+  "plugins": {
+    "reg-notify-github-plugin": {
+      "clientId": "...",
+      "prComment": true,
+      "prCommentBehavior": "default",
+      "setCommitStatus": true,
+      "shortDescription": true
+    }
+  }
+}
+```
+
+**設定の説明**:
+- `prComment: true` - PRへのコメントを有効化
+- `prCommentBehavior: "default"` - 既存コメントを更新（"new"で毎回新規コメント、"once"で初回のみ）
+- `setCommitStatus: true` - 差分がある場合コミットステータスをfailに設定
+- `shortDescription: true` - サマリーテーブルを表示
+
+### セットアップ
+
+reg-suit GitHub App は既にインストール済みで、clientIdも設定済みです。
+追加のセットアップは不要で、PRを作成すると自動的にコメントが投稿されます。
+
+### 動作
+
+1. **PRが作成・更新される**: vrt-pr.yml ワークフローが実行
+2. **VRT比較実行**: ベースブランチとの差分を検出
+3. **PRコメント投稿**: 比較結果をコメントとして自動投稿
+4. **コミットステータス設定**: 差分があればfail、なければsuccess
 
 ---
 
@@ -386,7 +473,7 @@ GCS_SERVICE_ACCOUNT_JSON='{
 {
   "core": {
     "workingDir": ".reg",
-    "actualDir": "${ACTUAL_DIR:-.maestro/screenshots}",
+    "actualDir": ".maestro/screenshots",
     "thresholdRate": 0.001
   },
   "plugins": {
@@ -403,13 +490,19 @@ GCS_SERVICE_ACCOUNT_JSON='{
 
 ### スクリプト
 
-**vrt-snapshot.ts**: ローカルスナップショット作成
+**vrt-snapshot-local.ts**: ローカルスナップショット作成
 - Git未コミット変更チェック
 - package.jsonからバージョン取得
 - Git情報取得 (ブランチ、ハッシュ)
 - スナップショット名生成
 - スクリーンショットコピー
 
-**vrt-find-snapshots.ts**: ハッシュから比較コマンド生成
+**vrt-find-snapshots-local.ts**: ハッシュから比較コマンド生成（ローカル用）
 - `find`コマンドで`.maestro/snapshots`配下を検索
 - reg-cli実行コマンドを生成・出力
+
+**vrt-publish-manual.ts**: GCSパブリッシュコマンド生成（マニュアル実行用）
+- Git情報取得 (ブランチ、ハッシュ、バージョン)
+- 2つのGCSキーを生成（ハッシュのみ + フルパス）
+- reg-suit実行コマンドを生成・出力
+- **注**: CI/CDでは使用しません（ワークフロー内で直接コマンドを実行）

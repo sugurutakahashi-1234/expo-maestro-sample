@@ -5,6 +5,11 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read        # リポジトリ読み取り
+  pull-requests: write  # PRコメント投稿
+  statuses: write       # コミットステータス設定
+
 jobs:
   vrt-compare:
     runs-on: ubuntu-latest
@@ -22,43 +27,44 @@ jobs:
         working-directory: apps/cool-app
         run: bun install
 
-      # TODO: GCS認証情報の設定
-      # env:
-      #   GCS_SERVICE_ACCOUNT_JSON: ${{ secrets.GCS_SERVICE_ACCOUNT_JSON }}
+      # Maestroは事前に実行済み（.maestro/screenshots が存在する前提）
 
-      - name: Create PR snapshot
-        working-directory: apps/cool-app
-        run: bun run vrt:snapshot:local:force
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: '${{ secrets.VRT_GCS_CREDENTIALS_JSON }}'
 
-      - name: Publish PR snapshot to GCS
+      - name: Publish PR snapshot to GCS (2 keys)
         working-directory: apps/cool-app
         run: |
+          # コマンド1: ハッシュのみのキー（比較用）
           PR_HASH=$(git rev-parse --short=7 HEAD)
-          # TODO: --ci フラグで認証情報を環境変数から読み込む対応が必要
-          COMMAND=$(bun run vrt:publish:remote $PR_HASH)
-          echo "Publishing PR snapshot: $COMMAND"
-          eval "$COMMAND"
+          rm -rf .reg && ACTUAL_KEY=$PR_HASH bunx reg-suit run
+
+          # コマンド2: フルパスのキー（履歴保存用）
+          BRANCH=$(git rev-parse --abbrev-ref HEAD | sed 's/[^a-zA-Z0-9._-]/_/g')
+          VERSION=$(jq -r '.version' package.json)
+          FULL_KEY="$BRANCH/$VERSION/$PR_HASH"
+          rm -rf .reg && ACTUAL_KEY=$FULL_KEY bunx reg-suit run
 
       - name: Compare with baseline
         working-directory: apps/cool-app
         run: |
-          # ベースブランチのハッシュを取得
+          # ハッシュのみのキーで比較（高速）
           BASE_HASH=$(git rev-parse --short=7 ${{ github.event.pull_request.base.sha }})
           PR_HASH=$(git rev-parse --short=7 HEAD)
 
           echo "Base commit: $BASE_HASH"
           echo "PR commit: $PR_HASH"
+          echo ""
 
-          # パス直接構築により、GCS検索不要で比較可能
-          # TODO: --ci フラグで認証情報を環境変数から読み込む対応が必要
           # PR_HASH が actual (新しい), BASE_HASH が expected (古い)
-          COMMAND=$(bun run vrt:find:remote $PR_HASH $BASE_HASH)
-          echo "Comparing: $COMMAND"
-          eval "$COMMAND"
+          # ハッシュのみのキーを使用
+          rm -rf .reg && EXPECTED_KEY=$BASE_HASH ACTUAL_KEY=$PR_HASH bunx reg-suit run
 
       - name: Upload VRT report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: vrt-report
           path: apps/cool-app/.reg/
@@ -71,4 +77,4 @@ jobs:
           echo "- Base: ${{ github.event.pull_request.base.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- PR: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "⚠️ **TODO**: GCS認証情報の環境変数対応が必要です" >> $GITHUB_STEP_SUMMARY
+          echo "✅ VRT比較が完了しました。詳細はアーティファクトのレポートを確認してください。" >> $GITHUB_STEP_SUMMARY

@@ -23,24 +23,25 @@ jobs:
         working-directory: apps/cool-app
         run: bun install
 
-      # TODO: GCS認証情報の設定
-      # 現在は認証情報がハードコードされているため、環境変数対応が必要
-      # env:
-      #   GCS_SERVICE_ACCOUNT_JSON: ${{ secrets.GCS_SERVICE_ACCOUNT_JSON }}
+      # Maestroは事前に実行済み（.maestro/screenshots が存在する前提）
 
-      - name: Create snapshot
-        working-directory: apps/cool-app
-        run: bun run vrt:snapshot:local:force
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: '${{ secrets.VRT_GCS_CREDENTIALS_JSON }}'
 
-      - name: Publish to GCS
+      - name: Publish to GCS (2 keys)
         working-directory: apps/cool-app
         run: |
-          # 最新のコミットハッシュを取得
+          # コマンド1: ハッシュのみのキー（比較用）
           HASH=$(git rev-parse --short=7 HEAD)
-          # TODO: --ci フラグで認証情報を環境変数から読み込む対応が必要
-          COMMAND=$(bun run vrt:publish:remote $HASH)
-          echo "Publishing baseline: $COMMAND"
-          eval "$COMMAND"
+          rm -rf .reg && ACTUAL_KEY=$HASH bunx reg-suit run
+
+          # コマンド2: フルパスのキー（履歴保存用）
+          BRANCH=$(git rev-parse --abbrev-ref HEAD | sed 's/[^a-zA-Z0-9._-]/_/g')
+          VERSION=$(jq -r '.version' package.json)
+          FULL_KEY="$BRANCH/$VERSION/$HASH"
+          rm -rf .reg && ACTUAL_KEY=$FULL_KEY bunx reg-suit run
 
       - name: Summary
         run: |
