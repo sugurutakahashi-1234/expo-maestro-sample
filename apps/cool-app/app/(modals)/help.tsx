@@ -15,7 +15,7 @@ export default function HelpScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>📱 このアプリについて</Text>
           <Text style={styles.text}>
-            このアプリは Expo Router を使った React Native のナビゲーションパターンを学習するためのデモアプリです。
+            このアプリは Expo Router を使った React Native のナビゲーションパターンを学習するためのデモアプリです
           </Text>
         </View>
 
@@ -24,7 +24,7 @@ export default function HelpScreen() {
           <View style={styles.item}>
             <Text style={styles.itemTitle}>ホーム</Text>
             <Text style={styles.itemText}>
-              記事一覧と詳細画面。ネストされたスタックナビゲーションの例。
+              記事一覧と詳細画面。ネストされたスタックナビゲーションの例
             </Text>
           </View>
           <View style={styles.item}>

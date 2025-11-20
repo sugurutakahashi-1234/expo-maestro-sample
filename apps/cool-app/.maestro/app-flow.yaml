@@ -119,6 +119,7 @@ appId: com.sugurutakahashi.coolapp
 # ホーム画面の確認
 - assertVisible: "Expo モノレポ with Bun 🎉"
 - assertVisible: "📚 記事リスト"
+- waitForAnimationToEnd
 - takeScreenshot: .maestro/screenshots/${output.platform}/home-tab
 
 # 記事リストの確認と詳細画面への遷移
@@ -142,16 +143,19 @@ appId: com.sugurutakahashi.coolapp
 # タブナビゲーションのテスト - 遷移タブ
 - tapOn: "遷移"
 - assertVisible: "画面遷移デモ"
+- waitForAnimationToEnd
 - takeScreenshot: .maestro/screenshots/${output.platform}/transition-tab
 
 # タブナビゲーションのテスト - このアプリについて
 - tapOn: "このアプリについて"
 - assertVisible: "このアプリについての説明"
+- waitForAnimationToEnd
 - takeScreenshot: .maestro/screenshots/${output.platform}/about-tab
 
 # タブナビゲーションのテスト - プロフィール
 - tapOn: "プロフィール"
 - assertVisible: "ユーザー情報"
+- waitForAnimationToEnd
 - takeScreenshot: .maestro/screenshots/${output.platform}/profile-tab
 # ホームに戻る
 - tapOn: "ホーム"
@@ -189,6 +193,7 @@ appId: com.sugurutakahashi.coolapp
     id: "password-display"
 
 # 入力完了後のスクリーンショット
+- waitForAnimationToEnd
 - takeScreenshot: .maestro/screenshots/${output.platform}/login-form-filled
 
 # ログインボタンをタップ
@@ -199,6 +204,7 @@ appId: com.sugurutakahashi.coolapp
 - assertVisible: "ログイン成功"
 
 # ログイン成功のスクリーンショット
+- waitForAnimationToEnd
 - takeScreenshot: .maestro/screenshots/${output.platform}/login-success
 
 # アラートを閉じる

@@ -1,0 +1,53 @@
+name: VRT Baseline Update
+
+# main ブランチにマージされたときにベースラインを更新
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read   # リポジトリ読み取り
+  statuses: write  # コミットステータス設定
+
+jobs:
+  update-baseline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # 全履歴を取得（git log用）
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        working-directory: apps/cool-app
+        run: bun install
+
+      # Maestroは事前に実行済み（.maestro/screenshots が存在する前提）
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: '${{ secrets.VRT_GCS_CREDENTIALS_JSON }}'
+
+      - name: Publish to GCS (2 keys)
+        working-directory: apps/cool-app
+        run: |
+          # コマンド1: ハッシュのみのキー（比較用）
+          HASH=$(git rev-parse --short=7 HEAD)
+          rm -rf .reg && ACTUAL_KEY=$HASH bunx reg-suit run
+
+          # コマンド2: フルパスのキー（履歴保存用）
+          BRANCH="${{ github.ref_name }}"
+          BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          VERSION=$(jq -r '.version' package.json)
+          FULL_KEY="$BRANCH_SAFE/$VERSION/$HASH"
+          rm -rf .reg && ACTUAL_KEY=$FULL_KEY bunx reg-suit run
+
+      - name: Summary
+        run: |
+          echo "✅ VRT baseline updated for commit $(git rev-parse --short=7 HEAD)"

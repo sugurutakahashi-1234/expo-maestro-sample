@@ -17,19 +17,19 @@ export default function AboutScreen() {
 
       <View style={styles.content}>
         <Text style={styles.text}>
-          これはExpo Routerのナビゲーションパターンを学習するためのデモアプリです。
+          モダンなナビゲーションパターンを体験できるデモアプリケーションです。
         </Text>
 
         <View style={styles.infoBox}>
           <Text style={styles.infoTitle}>📱 タブ内プッシュ遷移デモ</Text>
           <Text style={styles.infoText}>
-            このタブにも独自のスタックナビゲーターがあります。
-            下記の技術スタックをタップすると、タブバーが表示されたまま詳細画面に遷移します。
+            各タブに独立したスタックナビゲーションを実装。
+            技術スタックをタップすると、タブバーを維持したまま詳細画面へ遷移できます。
           </Text>
         </View>
 
-        <Text style={styles.sectionTitle}>使用技術</Text>
-        <Text style={styles.subtitle}>タップして詳細を表示</Text>
+        <Text style={styles.sectionTitle}>テクノロジースタック</Text>
+        <Text style={styles.subtitle}>各技術の詳細をチェック ✨</Text>
         {TECHNOLOGIES.map((tech) => (
           <Pressable
             key={tech.name}
@@ -45,7 +45,7 @@ export default function AboutScreen() {
       <View style={styles.navigation}>
         <Link href="/profile" asChild>
           <Pressable style={styles.button}>
-            <Text style={styles.buttonText}>プロフィールを見る</Text>
+            <Text style={styles.buttonText}>プロフィールページへ</Text>
           </Pressable>
         </Link>
 
@@ -54,7 +54,7 @@ export default function AboutScreen() {
           onPress={() => router.push("/help")}
         >
           <Text style={[styles.buttonText, styles.secondaryButtonText]}>
-            ヘルプを開く
+            サポートセンター
           </Text>
         </Pressable>
       </View>
@@ -65,13 +65,13 @@ export default function AboutScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#faf8ff",
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 20,
-    color: "#333",
+    color: "#6b21a8",
     padding: 20,
     paddingBottom: 0,
   },
@@ -119,22 +119,22 @@ const styles = StyleSheet.create({
     color: "#ccc",
   },
   infoBox: {
-    backgroundColor: "#e3f2fd",
+    backgroundColor: "#f3e8ff",
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#90caf9",
+    borderColor: "#d8b4fe",
     gap: 8,
   },
   infoTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1565c0",
+    color: "#7c3aed",
   },
   infoText: {
     fontSize: 14,
     lineHeight: 20,
-    color: "#1976d2",
+    color: "#8b5cf6",
   },
   navigation: {
     padding: 20,
@@ -143,9 +143,14 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 14,
     paddingHorizontal: 24,
-    backgroundColor: "#007AFF",
-    borderRadius: 8,
+    backgroundColor: "#8b5cf6",
+    borderRadius: 12,
     alignItems: "center",
+    shadowColor: "#8b5cf6",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   buttonText: {
     color: "#fff",
@@ -155,9 +160,9 @@ const styles = StyleSheet.create({
   secondaryButton: {
     backgroundColor: "#fff",
     borderWidth: 2,
-    borderColor: "#007AFF",
+    borderColor: "#a855f7",
   },
   secondaryButtonText: {
-    color: "#007AFF",
+    color: "#8b5cf6",
   },
 });

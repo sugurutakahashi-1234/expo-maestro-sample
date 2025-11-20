@@ -1,0 +1,81 @@
+name: VRT PR Comparison
+
+# PRが作成・更新されたときにVRT比較を実行
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read        # リポジトリ読み取り
+  pull-requests: write  # PRコメント投稿
+  statuses: write       # コミットステータス設定
+
+jobs:
+  vrt-compare:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # 全履歴を取得
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        working-directory: apps/cool-app
+        run: bun install
+
+      # Maestroは事前に実行済み（.maestro/screenshots が存在する前提）
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: '${{ secrets.VRT_GCS_CREDENTIALS_JSON }}'
+
+      - name: Publish PR snapshot to GCS (2 keys)
+        working-directory: apps/cool-app
+        run: |
+          # コマンド1: ハッシュのみのキー（比較用）
+          PR_HASH=$(git rev-parse --short=7 HEAD)
+          rm -rf .reg && ACTUAL_KEY=$PR_HASH bunx reg-suit run
+
+          # コマンド2: フルパスのキー（履歴保存用）
+          BRANCH="${{ github.head_ref }}"
+          BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          VERSION=$(jq -r '.version' package.json)
+          FULL_KEY="$BRANCH_SAFE/$VERSION/$PR_HASH"
+          rm -rf .reg && ACTUAL_KEY=$FULL_KEY bunx reg-suit run
+
+      - name: Compare with baseline
+        working-directory: apps/cool-app
+        run: |
+          # ハッシュのみのキーで比較（高速）
+          BASE_HASH=$(git rev-parse --short=7 ${{ github.event.pull_request.base.sha }})
+          PR_HASH=$(git rev-parse --short=7 HEAD)
+
+          echo "Base commit: $BASE_HASH"
+          echo "PR commit: $PR_HASH"
+          echo ""
+
+          # PR_HASH が actual (新しい), BASE_HASH が expected (古い)
+          # ハッシュのみのキーを使用
+          rm -rf .reg && EXPECTED_KEY=$BASE_HASH ACTUAL_KEY=$PR_HASH bunx reg-suit run
+
+      - name: Upload VRT report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: vrt-report
+          path: apps/cool-app/.reg/
+          retention-days: 30
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## VRT Comparison" >> $GITHUB_STEP_SUMMARY
+          echo "- Base: ${{ github.event.pull_request.base.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ VRT比較が完了しました。詳細はアーティファクトのレポートを確認してください。" >> $GITHUB_STEP_SUMMARY

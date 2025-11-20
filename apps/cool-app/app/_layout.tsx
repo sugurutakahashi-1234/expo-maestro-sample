@@ -28,6 +28,13 @@ export default function RootLayout() {
           title: "ライセンス情報"
         }}
       />
+      <Stack.Screen
+        name="(screens)/login"
+        options={{
+          presentation: "card",
+          title: "ログイン"
+        }}
+      />
     </Stack>
   );
 }

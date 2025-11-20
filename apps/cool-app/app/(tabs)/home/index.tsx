@@ -4,9 +4,9 @@ import { Greeting, formatMessage, getGreetingTime } from "cool-package";
 
 const ARTICLES = [
   { id: "1", title: "Expo Routerの始め方", category: "チュートリアル" },
-  { id: "2", title: "Bunモノレポのベストプラクティス", category: "ガイド" },
-  { id: "3", title: "React Nativeナビゲーションパターン", category: "チュートリアル" },
-  { id: "4", title: "TypeScriptのヒントとコツ", category: "ヒント" },
+  { id: "2", title: "モノレポで始める快適開発", category: "ガイド" },
+  { id: "3", title: "モダンなナビゲーション実装", category: "チュートリアル" },
+  { id: "4", title: "型安全な開発のコツ", category: "ヒント" },
 ];
 
 export default function HomeScreen() {
@@ -19,7 +19,7 @@ export default function HomeScreen() {
         <Text style={styles.subtitle}>{formatMessage(getGreetingTime())}</Text>
         <Greeting name="開発者" />
         <Text style={styles.info}>
-          このコンポーネントはcool-packageワークスペースからインポートされています
+          モノレポアーキテクチャで構築された快適な開発環境 🚀
         </Text>
       </View>
 
@@ -46,7 +46,7 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>その他のナビゲーション:</Text>
+        <Text style={styles.sectionTitle}>🔗 クイックリンク</Text>
 
         <Link href="/about" style={styles.link}>
           <Text style={styles.linkText}>このアプリについて</Text>
@@ -57,7 +57,7 @@ export default function HomeScreen() {
         </Link>
 
         <Link href="/help" style={styles.link}>
-          <Text style={styles.linkText}>ヘルプを開く</Text>
+          <Text style={styles.linkText}>サポートページ</Text>
         </Link>
 
         <Link href="/login" style={styles.link}>
@@ -71,7 +71,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#faf8ff",
   },
   container: {
     padding: 20,
@@ -81,14 +81,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
     paddingVertical: 20,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
+    color: "#6b21a8",
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
+    color: "#7c3aed",
   },
   info: {
     fontSize: 12,
@@ -134,20 +143,25 @@ const styles = StyleSheet.create({
   },
   articleCategory: {
     fontSize: 12,
-    color: "#007AFF",
+    color: "#a855f7",
     fontWeight: "500",
   },
   chevron: {
     fontSize: 24,
-    color: "#999",
+    color: "#c084fc",
     fontWeight: "300",
     marginLeft: 12,
   },
   link: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: "#34C759",
-    borderRadius: 8,
+    backgroundColor: "#8b5cf6",
+    borderRadius: 12,
+    shadowColor: "#8b5cf6",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   linkText: {
     color: "#fff",
