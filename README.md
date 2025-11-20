@@ -207,12 +207,19 @@ React NativeのaccessibilityLabel属性を使用:
 
 ### 5. VRT: ステータスバー固定
 
-**目的**:
-- スクリーンショット比較時に時刻やバッテリー残量の差異を防ぐ
+**目的**: スクリーンショット比較時に時刻やバッテリー残量の差異を防ぐ
 
-**iOS: xcrun simctl status_barで固定**:
+**自動実行**: `bun run maestro:ios` / `bun run maestro:android` で自動的に実行されます
+
+**詳細**:
+- iOS: `xcrun simctl status_bar` で9:41、バッテリー100%に固定
+- Android: `adb Demo Mode` で9:41、バッテリー100%に固定
+
+<details>
+<summary>手動実行コマンド（参考）</summary>
+
+**iOS**:
 ```bash
-# 9:41、バッテリー100%、Wi-Fi/セルラー接続状態に固定
 DEVICE_ID=$(xcrun simctl list devices booted | grep -o '[A-F0-9-]\{36\}' | head -1)
 xcrun simctl status_bar $DEVICE_ID override \
   --time '9:41' \
@@ -223,38 +230,23 @@ xcrun simctl status_bar $DEVICE_ID override \
   --wifiBars 3
 ```
 
-**Android: adb Demo Modeで固定**:
+**Android**:
 ```bash
-# Demo Modeを有効化
 adb shell settings put global sysui_demo_allowed 1
-
-# 時刻を9:41に設定
 adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 0941
-
-# バッテリーを100%に設定
 adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false
-
-# Wi-Fiを4本に設定
 adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4
-
-# 通知を非表示
 adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false
-
-# Demo Modeを適用
 adb shell am broadcast -a com.android.systemui.demo -e command enter
 ```
 
-**実装方法**:
-`package.json`の`maestro:ios`/`maestro:android`スクリプトで、ステータスバー固定後にMaestroテストを実行します。
-
+**手動分割実行**:
 ```bash
-# ステータスバー固定 → Maestroテスト実行（自動）
-bun run maestro:ios
-
-# 手動で実行する場合は以下のように分けることも可能
 bun run statusbar:ios
 maestro test .maestro/app-flow.yaml
 ```
+
+</details>
 
 ## 📸 VRT (Visual Regression Testing)
 
@@ -314,41 +306,30 @@ bun run maestro:ios
 # 2. スナップショット作成
 bun run vrt:snapshot:local
 # → .maestro/snapshots/main/1.0.0/041e30c/ に保存
+```
 
-# 3. スナップショット比較（2つの方法）
+**3. スナップショット比較（2つの方法）**
 
-## 方法A: 現在のスクリーンショット vs 過去のスナップショット
-bun run vrt:compare:local:current <expected-hash>
-# 例: bun run vrt:compare:local:current 041e30c
-# → 現在の .maestro/screenshots/ と過去のスナップショットを比較
-# → HTMLレポートが自動で開く
+| 方法 | コマンド | 用途 |
+|------|----------|------|
+| **方法A: current** | `vrt:compare:local:current <hash>` | 開発中の即座確認（スナップショット作成不要） |
+| **方法B: archived** | `vrt:compare:local:archived <h1> <h2>` | 過去スナップショット同士の比較 |
 
-## 方法B: 過去のスナップショット vs 過去のスナップショット
-bun run vrt:compare:local:archived <actual-hash> <expected-hash>
-# 例: bun run vrt:compare:local:archived f6e97f4 041e30c
-# → 2つの過去のスナップショット同士を比較
-# → HTMLレポートが自動で開く
+```bash
+# 方法A: 開発中の即座確認
+bun run vrt:compare:local:current 041e30c
 
-# 4. GCSへのパブリッシュ（オプション、チーム共有用）
+# 方法B: 過去同士の比較
+bun run vrt:compare:local:archived f6e97f4 041e30c
+```
+
+**4. GCSへのパブリッシュ（オプション、チーム共有用）**
+
+```bash
 bun run vrt:publish:manual
 # → reg-suit runコマンドが出力される
 # → 出力されたコマンドを確認してコピー&実行
 ```
-
-### 2つの比較方法の使い分け
-
-| 方法 | 用途 | actual | expected |
-|------|------|--------|----------|
-| **方法A: current** | 開発中のUI確認 | 現在のスクリーンショット | 過去のスナップショット |
-| **方法B: archived** | 過去同士の比較 | 過去のスナップショット | 過去のスナップショット |
-
-**方法Aの使用例**:
-- feature開発中に、mainブランチのスナップショットと比較
-- コードを変更後、すぐにMaestro実行して差分確認
-
-**方法Bの使用例**:
-- リリース前のmain vs 前回リリースの比較
-- 異なるブランチのスナップショット同士の比較
 
 ### ハッシュベースの自動検索
 
@@ -375,58 +356,25 @@ find .maestro/snapshots -type d -maxdepth 3
 
 ### 実践例
 
-#### 例1: リリース前のUI確認
-
+**基本パターン（過去同士の比較）**:
 ```bash
-# 1. mainでベースライン作成
-git checkout main && git pull
+# 1. ベースラインブランチでスナップショット作成
+git checkout <base-branch>
 bun run maestro:ios
 bun run vrt:snapshot:local
 
-# 2. リリースブランチでスナップショット作成
-git checkout release/v1.1.0
+# 2. 比較対象ブランチでスナップショット作成
+git checkout <target-branch>
 bun run maestro:ios
 bun run vrt:snapshot:local
 
-# 3. 比較（release が actual, main が expected）
-bun run vrt:compare:local:archived <release-hash> <main-hash>
+# 3. 比較実行
+bun run vrt:compare:local:archived <target-hash> <base-hash>
 ```
 
-#### 例2: feature branchの影響範囲確認
+---
 
-```bash
-# 1. mainでベースライン作成
-git checkout main
-bun run maestro:ios
-bun run vrt:snapshot:local
-
-# 2. 機能ブランチでスナップショット作成
-git checkout feature/new-ui
-bun run maestro:ios
-bun run vrt:snapshot:local
-
-# 3. 比較（feature が actual, main が expected）
-bun run vrt:compare:local:archived <feature-hash> <main-hash>
-```
-
-#### 例3: 過去のコミットとの比較
-
-```bash
-# 1. 過去のコミットをcheckout
-git checkout abc123
-bun run maestro:ios
-bun run vrt:snapshot:local
-
-# 2. 現在のコミットに戻る
-git checkout -
-bun run maestro:ios
-bun run vrt:snapshot:local
-
-# 3. 比較
-bun run vrt:compare:local:archived <current-hash> <past-hash>
-```
-
-#### 例4: 開発中の即座のUI確認（方法A）
+**開発中の即座確認（方法A）**:
 
 ```bash
 # 1. mainのスナップショットを作成（1回だけ）
