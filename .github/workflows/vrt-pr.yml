@@ -43,7 +43,7 @@ jobs:
           PR_HASH=$(git rev-parse --short=7 HEAD)
           echo "🔍 Debug Info (Command 1)"
           echo "PR_HASH: $PR_HASH"
-          rm -rf .reg && ACTUAL_KEY=$PR_HASH bunx reg-suit run
+          rm -rf .reg && EXPECTED_KEY=$PR_HASH ACTUAL_KEY=$PR_HASH bunx reg-suit run
 
           # フルパスのキー（履歴保存用）
           BRANCH="${{ github.head_ref }}"
@@ -55,7 +55,7 @@ jobs:
           echo "BRANCH_SAFE: $BRANCH_SAFE"
           echo "VERSION: $VERSION"
           echo "FULL_KEY: $FULL_KEY"
-          rm -rf .reg && ACTUAL_KEY=$FULL_KEY bunx reg-suit run
+          rm -rf .reg && EXPECTED_KEY=$FULL_KEY ACTUAL_KEY=$FULL_KEY bunx reg-suit run
 
       # GitHub ActionsのPRイベントではdetached HEAD状態でチェックアウトされるため、
       # reg-notify-github-pluginがブランチ名を検出できず、PRコメントを投稿できない。
