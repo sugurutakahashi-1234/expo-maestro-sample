@@ -9,6 +9,8 @@ permissions:
   contents: read        # リポジトリ読み取り
   pull-requests: write  # PRコメント投稿
   statuses: write       # コミットステータス設定
+  pages: write          # GitHub Pages への書き込み
+  id-token: write       # OIDC トークン検証用
 
 jobs:
   vrt-compare:
@@ -96,6 +98,17 @@ jobs:
           path: apps/cool-app/.reg/
           retention-days: 30
           include-hidden-files: true  # .reg/ は隠しディレクトリのため必須
+
+      - name: Upload Pages Artifact
+        if: always()
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: apps/cool-app/.reg
+
+      - name: Deploy to GitHub Pages
+        if: always()
+        id: deployment
+        uses: actions/deploy-pages@v4
 
       - name: Summary
         if: always()
