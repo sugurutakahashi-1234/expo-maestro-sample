@@ -56,5 +56,10 @@ jobs:
           rm -rf .reg && ACTUAL_KEY=$FULL_KEY bunx reg-suit run
 
       - name: Summary
+        if: always()
         run: |
-          echo "✅ VRT baseline updated for commit $(git rev-parse --short=7 HEAD)"
+          HASH=$(git rev-parse --short=7 HEAD)
+          echo "## VRT Baseline Update" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: $HASH" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ ベースラインが正常に更新されました。" >> $GITHUB_STEP_SUMMARY

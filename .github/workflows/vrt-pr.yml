@@ -55,6 +55,10 @@ jobs:
           echo "FULL_KEY: $FULL_KEY"
           rm -rf .reg && ACTUAL_KEY=$FULL_KEY bunx reg-suit run
 
+      - name: Workaround for detached HEAD
+        run: |
+          git checkout ${{ github.head_ref }} || git checkout -b ${{ github.head_ref }}
+
       - name: Compare with baseline
         working-directory: apps/cool-app
         run: |
@@ -73,6 +77,14 @@ jobs:
           # ハッシュのみのキーを使用
           rm -rf .reg && EXPECTED_KEY=$BASE_HASH ACTUAL_KEY=$PR_HASH bunx reg-suit run
 
+          # 比較結果の詳細を出力
+          echo ""
+          echo "📁 .reg directory structure:"
+          ls -lah .reg/
+          echo ""
+          echo "📄 VRT comparison result (out.json):"
+          cat .reg/out.json
+
       - name: Upload VRT report
         if: always()
         uses: actions/upload-artifact@v5
@@ -84,8 +96,10 @@ jobs:
       - name: Summary
         if: always()
         run: |
+          BASE_HASH=$(git rev-parse --short=7 ${{ github.event.pull_request.base.sha }})
+          PR_HASH=$(git rev-parse --short=7 HEAD)
           echo "## VRT Comparison" >> $GITHUB_STEP_SUMMARY
-          echo "- Base: ${{ github.event.pull_request.base.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "- PR: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Base: $BASE_HASH" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: $PR_HASH" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ VRT比較が完了しました。詳細はアーティファクトのレポートを確認してください。" >> $GITHUB_STEP_SUMMARY
