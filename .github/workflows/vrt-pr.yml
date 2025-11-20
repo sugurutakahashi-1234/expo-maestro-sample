@@ -67,20 +67,38 @@ jobs:
       - name: Compare with baseline
         working-directory: apps/cool-app
         run: |
-          # ハッシュのみのキーで比較
+          # フルパスのキーで比較
+          # ベース側（EXPECTED）の変数を構築
           BASE_HASH=$(git rev-parse --short=7 ${{ github.event.pull_request.base.sha }})
+          BASE_VERSION=$(git show ${{ github.event.pull_request.base.sha }}:apps/cool-app/package.json | jq -r '.version')
+          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          BASE_BRANCH_SAFE=$(echo "$BASE_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          EXPECTED_KEY="$BASE_BRANCH_SAFE/$BASE_VERSION/$BASE_HASH"
+
+          # PR側（ACTUAL）の変数を構築
           PR_HASH=$(git rev-parse --short=7 HEAD)
+          PR_VERSION=$(jq -r '.version' package.json)
+          PR_BRANCH="${{ github.head_ref }}"
+          PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          ACTUAL_KEY="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH"
 
           echo "🔍 VRT Comparison Debug Info"
-          echo "Base branch: ${{ github.event.pull_request.base.ref }}"
+          echo "Base branch: $BASE_BRANCH"
+          echo "Base version: $BASE_VERSION"
           echo "Base commit: $BASE_HASH"
-          echo "PR branch: ${{ github.head_ref }}"
+          echo "EXPECTED_KEY: $EXPECTED_KEY"
+          echo ""
+          echo "PR branch: $PR_BRANCH"
+          echo "PR version: $PR_VERSION"
           echo "PR commit: $PR_HASH"
+          echo "ACTUAL_KEY: $ACTUAL_KEY"
           echo ""
 
-          # PR_HASH が actual (新しい), BASE_HASH が expected (古い)
-          # ハッシュのみのキーを使用
-          rm -rf .reg && EXPECTED_KEY=$BASE_HASH ACTUAL_KEY=$PR_HASH bunx reg-suit run
+          # フルパスのキーを使用して比較
+          rm -rf .reg && EXPECTED_KEY=$EXPECTED_KEY ACTUAL_KEY=$ACTUAL_KEY bunx reg-suit run
+
+          # シンプルバージョン（ハッシュのみで比較する場合は以下を使用）
+          # rm -rf .reg && EXPECTED_KEY=$BASE_HASH ACTUAL_KEY=$PR_HASH bunx reg-suit run
 
           # 比較結果の詳細を出力
           echo ""
