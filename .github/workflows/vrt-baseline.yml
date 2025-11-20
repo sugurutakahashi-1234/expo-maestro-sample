@@ -31,25 +31,27 @@ jobs:
         with:
           credentials_json: '${{ secrets.VRT_GCS_CREDENTIALS_JSON }}'
 
-      - name: Publish to GCS (2 keys)
+      - name: Publish to GCS
         working-directory: apps/cool-app
         run: |
-          # コマンド1: ハッシュのみのキー（比較用）
-          HASH=$(git rev-parse --short=7 HEAD)
-          echo "🔍 Debug Info (Command 1)"
-          echo "HASH: $HASH"
-          rm -rf .reg && EXPECTED_KEY=$HASH ACTUAL_KEY=$HASH bunx reg-suit run
+          # Note: ハッシュのみのキー（コマンド1）は不要（コメントアウト済み）
+          # 理由: vrt-pr.yml の比較ではフルパスのキーだけを使用している。
+          # ハッシュのみのキーは使われていないため、アップロード不要。
+          #
+          # # コマンド1: ハッシュのみのキー（比較用）
+          # HASH=$(git rev-parse --short=7 HEAD)
+          # echo "🔍 Debug Info (Command 1)"
+          # echo "HASH: $HASH"
+          # rm -rf .reg && ACTUAL_KEY=$HASH bunx reg-suit run
 
-          # コマンド2: フルパスのキー（履歴保存用）
+          # フルパスのキー（履歴保存用）
+          HASH=$(git rev-parse --short=7 HEAD)
           BRANCH="${{ github.ref_name }}"
           BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           VERSION=$(jq -r '.version' package.json)
           FULL_KEY="$BRANCH_SAFE/$VERSION/$HASH"
-          echo "🔍 Debug Info (Command 2)"
-          echo "BRANCH: $BRANCH"
-          echo "BRANCH_SAFE: $BRANCH_SAFE"
-          echo "VERSION: $VERSION"
-          echo "FULL_KEY: $FULL_KEY"
+          echo "🔍 Publishing to GCS"
+          echo "KEY: $FULL_KEY"
           rm -rf .reg && EXPECTED_KEY=$FULL_KEY ACTUAL_KEY=$FULL_KEY bunx reg-suit run
 
       - name: Summary

@@ -36,26 +36,34 @@ jobs:
         with:
           credentials_json: '${{ secrets.VRT_GCS_CREDENTIALS_JSON }}'
 
-      - name: Publish PR snapshot to GCS (2 keys)
-        working-directory: apps/cool-app
-        run: |
-          # ハッシュのみのキー（比較用）
-          PR_HASH=$(git rev-parse --short=7 HEAD)
-          echo "🔍 Debug Info (Command 1)"
-          echo "PR_HASH: $PR_HASH"
-          rm -rf .reg && EXPECTED_KEY=$PR_HASH ACTUAL_KEY=$PR_HASH bunx reg-suit run
-
-          # フルパスのキー（履歴保存用）
-          BRANCH="${{ github.head_ref }}"
-          BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
-          VERSION=$(jq -r '.version' package.json)
-          FULL_KEY="$BRANCH_SAFE/$VERSION/$PR_HASH"
-          echo "🔍 Debug Info (Command 2)"
-          echo "BRANCH: $BRANCH"
-          echo "BRANCH_SAFE: $BRANCH_SAFE"
-          echo "VERSION: $VERSION"
-          echo "FULL_KEY: $FULL_KEY"
-          rm -rf .reg && EXPECTED_KEY=$FULL_KEY ACTUAL_KEY=$FULL_KEY bunx reg-suit run
+      # Note: このステップは不要（コメントアウト済み）
+      # 理由: "Compare with baseline" ステップで `reg-suit run` を実行すると、
+      # 自動的に compare + publish + notify が実行されるため、事前アップロードは不要。
+      # このステップを実行すると以下の問題が発生する：
+      # 1. 同じスナップショットが2回アップロードされる（無駄）
+      # 2. 2つの GitHub ステータスチェックが作成される（重複表示）
+      # 3. 処理時間が増加する
+      #
+      # - name: Publish PR snapshot to GCS (2 keys)
+      #   working-directory: apps/cool-app
+      #   run: |
+      #     # ハッシュのみのキー（比較用）
+      #     PR_HASH=$(git rev-parse --short=7 HEAD)
+      #     echo "🔍 Debug Info (Command 1)"
+      #     echo "PR_HASH: $PR_HASH"
+      #     rm -rf .reg && ACTUAL_KEY=$PR_HASH bunx reg-suit run
+      #
+      #     # フルパスのキー（履歴保存用）
+      #     BRANCH="${{ github.head_ref }}"
+      #     BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+      #     VERSION=$(jq -r '.version' package.json)
+      #     FULL_KEY="$BRANCH_SAFE/$VERSION/$PR_HASH"
+      #     echo "🔍 Debug Info (Command 2)"
+      #     echo "BRANCH: $BRANCH"
+      #     echo "BRANCH_SAFE: $BRANCH_SAFE"
+      #     echo "VERSION: $VERSION"
+      #     echo "FULL_KEY: $FULL_KEY"
+      #     rm -rf .reg && ACTUAL_KEY=$FULL_KEY bunx reg-suit run
 
       # GitHub ActionsのPRイベントではdetached HEAD状態でチェックアウトされるため、
       # reg-notify-github-pluginがブランチ名を検出できず、PRコメントを投稿できない。
@@ -160,11 +168,6 @@ jobs:
             ---
 
             ### 💻 ローカルでレポートを表示
-
-            **初回のみ: gcloud認証**
-            ```bash
-            gcloud auth login
-            ```
 
             **比較レポートをダウンロード:**
             ```bash
