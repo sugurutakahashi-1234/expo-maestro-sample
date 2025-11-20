@@ -1,0 +1,95 @@
+name: Cleanup Old VRT Reports
+
+# 毎週日曜日 0時（UTC）に実行 = 日本時間 日曜日 9時
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:  # 手動実行も可能
+
+permissions:
+  contents: write  # gh-pages ブランチへの書き込み
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+          fetch-depth: 0  # 全履歴取得
+
+      - name: Delete reports older than 30 days
+        run: |
+          echo "🗑️ Deleting VRT reports older than 30 days..."
+
+          # vrt-sample ディレクトリ配下の30日以上古いディレクトリを削除
+          if [ -d "vrt-sample" ]; then
+            find vrt-sample -type d -mtime +30 -print -exec rm -rf {} + 2>/dev/null || true
+
+            # 削除後の状態を確認
+            echo ""
+            echo "📊 Remaining reports:"
+            du -sh vrt-sample/* 2>/dev/null || echo "No reports remaining"
+          else
+            echo "⚠️ vrt-sample directory not found"
+          fi
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "✨ No old reports to delete"
+          else
+            git add -A
+            git commit -m "chore: cleanup VRT reports older than 30 days"
+            git push
+            echo "✅ Old reports deleted and pushed"
+          fi
+
+      - name: Report disk usage and check size limit
+        if: always()
+        run: |
+          echo "## 📊 GitHub Pages Disk Usage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -d "vrt-sample" ]; then
+            # サイズを取得（MB単位）
+            SIZE_MB=$(du -sm vrt-sample 2>/dev/null | cut -f1)
+            echo "Current total size: **${SIZE_MB}MB**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # 500MB超過チェック
+            if [ "$SIZE_MB" -gt 500 ]; then
+              echo "### ⚠️ WARNING: Size Limit Alert" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "VRT reports size is **${SIZE_MB}MB** (>500MB threshold)" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Recommended actions:**" >> $GITHUB_STEP_SUMMARY
+              echo "- Consider reducing retention period (30 days → 14 days)" >> $GITHUB_STEP_SUMMARY
+              echo "- GitHub Pages limit is 1GB (1000MB)" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            # 800MB超過チェック（緊急警告）
+            if [ "$SIZE_MB" -gt 800 ]; then
+              echo "### 🚨 CRITICAL: Near GitHub Pages Limit!" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "Size is **${SIZE_MB}MB** (>80% of 1GB limit)" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**URGENT: Take action immediately!**" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            echo "### Detailed breakdown:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            du -sh vrt-sample 2>/dev/null
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Recent 20 reports:" >> $GITHUB_STEP_SUMMARY
+            du -sh vrt-sample/*/* 2>/dev/null | tail -20 || true
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ vrt-sample directory not found" >> $GITHUB_STEP_SUMMARY
+          fi
