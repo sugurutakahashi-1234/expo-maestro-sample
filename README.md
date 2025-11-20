@@ -205,35 +205,7 @@ React NativeのaccessibilityLabel属性を使用:
 
 ---
 
-### 7. Maestro CLIの並列実行不可
-
-**問題**:
-- 複数のMaestro CLIインスタンスを同時実行できない
-- すべてのインスタンスがポート7001を使用するため競合する
-
-**エラー例**:
-```
-java.io.IOException: Command failed (tcp:7001): closed
-```
-
-**❌ 間違った例（並列実行）**:
-```bash
-# concurrentlyやバックグラウンド実行は不可
-bun run maestro:ios & bun run maestro:android
-```
-
-**✅ 正しい例（順次実行）**:
-```bash
-# && で順次実行
-bun run maestro:ios && bun run maestro:android
-
-# または専用コマンドを使用
-bun run maestro:all
-```
-
----
-
-### 8. VRT: ステータスバー固定
+### 5. VRT: ステータスバー固定
 
 **目的**:
 - スクリーンショット比較時に時刻やバッテリー残量の差異を防ぐ
