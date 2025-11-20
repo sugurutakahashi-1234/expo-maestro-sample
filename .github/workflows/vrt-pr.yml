@@ -83,15 +83,8 @@ jobs:
           PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           ACTUAL_KEY="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH"
 
-          echo "🔍 VRT Comparison Debug Info"
-          echo "Base branch: $BASE_BRANCH"
-          echo "Base version: $BASE_VERSION"
-          echo "Base commit: $BASE_HASH"
+          echo "🔍 VRT Comparison Keys"
           echo "EXPECTED_KEY: $EXPECTED_KEY"
-          echo ""
-          echo "PR branch: $PR_BRANCH"
-          echo "PR version: $PR_VERSION"
-          echo "PR commit: $PR_HASH"
           echo "ACTUAL_KEY: $ACTUAL_KEY"
           echo ""
 
@@ -177,25 +170,17 @@ jobs:
             ```bash
             cd apps/cool-app
             rm -rf .reg
+            mkdir -p .reg
             gsutil -m cp -r "gs://vrt-sample/${{ steps.comparison-keys.outputs.actual-key }}" .reg
             open .reg/${{ steps.comparison-keys.outputs.pr-hash }}/index.html
             ```
 
             ---
 
-            ### 📊 詳細情報
+            ### 📊 比較情報
 
-            **Base (比較元):**
-            - Branch: `${{ steps.comparison-keys.outputs.base-branch }}`
-            - Version: `${{ steps.comparison-keys.outputs.base-version }}`
-            - Commit: `${{ steps.comparison-keys.outputs.base-hash }}`
-            - GCS Key: `${{ steps.comparison-keys.outputs.expected-key }}`
-
-            **PR (比較先):**
-            - Branch: `${{ steps.comparison-keys.outputs.pr-branch }}`
-            - Version: `${{ steps.comparison-keys.outputs.pr-version }}`
-            - Commit: `${{ steps.comparison-keys.outputs.pr-hash }}`
-            - GCS Key: `${{ steps.comparison-keys.outputs.actual-key }}`
+            - **Base**: `${{ steps.comparison-keys.outputs.expected-key }}`
+            - **PR**: `${{ steps.comparison-keys.outputs.actual-key }}`
 
             ---
             *Powered by reg-suit + GitHub Pages*
