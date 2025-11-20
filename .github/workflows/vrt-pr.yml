@@ -22,6 +22,30 @@ jobs:
         with:
           fetch-depth: 0  # 全履歴を取得
 
+      - name: Check VRT conditions
+        run: |
+          echo "🔍 Checking VRT execution conditions..."
+
+          # コード系ファイルの変更チェック（.ts, .tsx, .js, .jsx, .json, .yaml）
+          CODE_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD | grep -E '\.(ts|tsx|js|jsx|json|yaml)$' || echo "")
+
+          # スクリーンショットの変更チェック
+          SCREENSHOTS_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD | grep -E '^apps/cool-app/\.maestro/screenshots/' || echo "")
+
+          # スキップ判定
+          if [ -z "$CODE_CHANGED" ]; then
+            echo "⏭️ VRT Skipped: No code changes detected (only .md or other files)"
+            exit 0
+          fi
+
+          if [ -z "$SCREENSHOTS_CHANGED" ]; then
+            echo "❌ VRT Skipped: No screenshot changes detected"
+            echo "💡 Run Maestro tests to generate new screenshots: bun run maestro:ios or bun run maestro:android"
+            exit 0
+          fi
+
+          echo "✅ VRT conditions met - proceeding with comparison"
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
