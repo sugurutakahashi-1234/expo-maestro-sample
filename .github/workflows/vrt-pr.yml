@@ -47,8 +47,12 @@ jobs:
           else
             echo "should_run=true" >> $GITHUB_OUTPUT
             echo "✅ VRT conditions met - proceeding with comparison"
-            [ -n "$CODE_CHANGED" ] && echo "  - Code changes detected"
-            [ -n "$SCREENSHOTS_CHANGED" ] && echo "  - Screenshot changes detected"
+            if [ -n "$CODE_CHANGED" ]; then
+              echo "  - Code changes detected"
+            fi
+            if [ -n "$SCREENSHOTS_CHANGED" ]; then
+              echo "  - Screenshot changes detected"
+            fi
           fi
 
       - name: Comment PR - VRT Skipped
