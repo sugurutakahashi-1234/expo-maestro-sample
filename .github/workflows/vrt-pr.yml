@@ -65,6 +65,7 @@ jobs:
           git checkout ${{ github.head_ref }}
 
       - name: Compare with baseline
+        id: comparison-keys
         working-directory: apps/cool-app
         run: |
           # フルパスのキーで比較
@@ -93,6 +94,18 @@ jobs:
           echo "PR commit: $PR_HASH"
           echo "ACTUAL_KEY: $ACTUAL_KEY"
           echo ""
+
+          # Output for PR comment
+          echo "base-branch=$BASE_BRANCH" >> $GITHUB_OUTPUT
+          echo "base-branch-safe=$BASE_BRANCH_SAFE" >> $GITHUB_OUTPUT
+          echo "base-version=$BASE_VERSION" >> $GITHUB_OUTPUT
+          echo "base-hash=$BASE_HASH" >> $GITHUB_OUTPUT
+          echo "pr-branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+          echo "pr-branch-safe=$PR_BRANCH_SAFE" >> $GITHUB_OUTPUT
+          echo "pr-version=$PR_VERSION" >> $GITHUB_OUTPUT
+          echo "pr-hash=$PR_HASH" >> $GITHUB_OUTPUT
+          echo "expected-key=$EXPECTED_KEY" >> $GITHUB_OUTPUT
+          echo "actual-key=$ACTUAL_KEY" >> $GITHUB_OUTPUT
 
           # フルパスのキーを使用して比較
           rm -rf .reg && EXPECTED_KEY=$EXPECTED_KEY ACTUAL_KEY=$ACTUAL_KEY bunx reg-suit run
@@ -137,17 +150,41 @@ jobs:
           retention-days: 30
           include-hidden-files: true  # .reg/ は隠しディレクトリのため必須
 
-      - name: Comment PR with GitHub Pages URL
+      - name: Comment PR with VRT access methods
         if: always()
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: vrt-report
           message: |
-            ## 📊 VRT Report (GitHub Pages)
+            ## 📊 VRT Report
+
+            ### 🌐 オンライン表示（GitHub Pages）
 
             🔗 **View Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/
 
-            このレポートはPRマージ後も永続的にアクセス可能です。
+            ⏱️ このレポートは **30日間保存** されます（その後自動削除）。
+
+            ---
+
+            ### 💻 ローカルで過去のレポートを表示
+
+            GCSから過去のレポートを取得して比較:
+
+            ```bash
+            cd apps/cool-app
+
+            rm -rf .reg
+
+            EXPECTED_KEY="${{ steps.comparison-keys.outputs.expected-key }}" \
+            ACTUAL_KEY="${{ steps.comparison-keys.outputs.actual-key }}" \
+            GOOGLE_APPLICATION_CREDENTIALS="./vrt-gcs-credentials.json" \
+            bunx reg-suit run
+
+            open .reg/index.html
+            ```
+
+            **必要な準備:**
+            - GCS認証ファイル: `apps/cool-app/vrt-gcs-credentials.json` を配置
 
             ---
             *Powered by reg-suit + GitHub Pages*
