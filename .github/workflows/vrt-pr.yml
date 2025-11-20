@@ -88,18 +88,6 @@ jobs:
           echo "📄 VRT comparison result (out.json):"
           jq '.' .reg/out.json
 
-      - name: Verify .reg directory before upload
-        if: always()
-        run: |
-          echo "Current directory (repo root):"
-          pwd
-          echo ""
-          echo "Checking from repo root (upload-artifact のパス):"
-          ls -la apps/cool-app/.reg/ || echo "❌ apps/cool-app/.reg/ not found from root"
-          echo ""
-          echo "Checking from apps/cool-app directory:"
-          cd apps/cool-app && ls -la .reg/ || echo "❌ .reg/ not found in apps/cool-app"
-
       - name: Upload VRT report
         if: always()
         uses: actions/upload-artifact@v5
@@ -107,6 +95,7 @@ jobs:
           name: vrt-report
           path: apps/cool-app/.reg/
           retention-days: 30
+          include-hidden-files: true  # .reg/ は隠しディレクトリのため必須
 
       - name: Summary
         if: always()
