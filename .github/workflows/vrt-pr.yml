@@ -39,18 +39,39 @@ jobs:
           # スクリーンショットの変更チェック
           SCREENSHOTS_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD | grep -E '^apps/cool-app/\.maestro/screenshots/' || echo "")
 
-          # スキップ判定
-          if [ -z "$CODE_CHANGED" ]; then
+          # スキップ判定（どちらか一方があれば実行）
+          if [ -z "$CODE_CHANGED" ] && [ -z "$SCREENSHOTS_CHANGED" ]; then
             echo "should_run=false" >> $GITHUB_OUTPUT
-            echo "⏭️ VRT Skipped: No code changes detected (only .md or other files)"
-          elif [ -z "$SCREENSHOTS_CHANGED" ]; then
-            echo "should_run=false" >> $GITHUB_OUTPUT
-            echo "❌ VRT Skipped: No screenshot changes detected"
-            echo "💡 Run Maestro tests to generate new screenshots: bun run maestro:ios or bun run maestro:android"
+            echo "skip_reason=コード変更もスクリーンショット変更も検出されませんでした" >> $GITHUB_OUTPUT
+            echo "⏭️ VRT Skipped: No code or screenshot changes detected"
           else
             echo "should_run=true" >> $GITHUB_OUTPUT
             echo "✅ VRT conditions met - proceeding with comparison"
+            [ -n "$CODE_CHANGED" ] && echo "  - Code changes detected"
+            [ -n "$SCREENSHOTS_CHANGED" ] && echo "  - Screenshot changes detected"
           fi
+
+      - name: Comment PR - VRT Skipped
+        if: steps.check.outputs.should_run == 'false'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: vrt-skipped
+          message: |
+            ## ⏭️ VRT Skipped
+
+            **理由**: ${{ steps.check.outputs.skip_reason }}
+
+            ---
+
+            💡 **VRTを実行するには以下のいずれかの変更が必要です:**
+            - コード変更（`.ts`, `.tsx`, `.js`, `.jsx`, `.json`, `.yaml`）
+            - スクリーンショット変更（`apps/cool-app/.maestro/screenshots/`）
+
+            スクリーンショットを生成するには:
+            ```bash
+            cd apps/cool-app
+            bun run maestro:all # Maestroテスト実行（スクリーンショット取得）
+            ```
 
       - name: Setup Bun
         if: steps.check.outputs.should_run == 'true'
