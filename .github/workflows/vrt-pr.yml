@@ -99,6 +99,9 @@ jobs:
           retention-days: 30
           include-hidden-files: true  # .reg/ は隠しディレクトリのため必須
 
+      # GitHub Pages へのデプロイ（実験的機能）
+      # 注意: デプロイごとにサイト全体が上書きされるため、最新のVRTレポートのみが表示される
+      # 複数PRの履歴を残したい場合は peaceiris/actions-gh-pages の使用を検討
       - name: Upload Pages Artifact
         if: always()
         uses: actions/upload-pages-artifact@v4
