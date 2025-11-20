@@ -166,25 +166,36 @@ jobs:
 
             ---
 
-            ### 💻 ローカルで過去のレポートを表示
+            ### 💻 ローカルでレポートを表示
 
-            GCSから過去のレポートを取得して比較:
-
+            **初回のみ: gcloud認証**
             ```bash
-            cd apps/cool-app
-
-            rm -rf .reg
-
-            EXPECTED_KEY="${{ steps.comparison-keys.outputs.expected-key }}" \
-            ACTUAL_KEY="${{ steps.comparison-keys.outputs.actual-key }}" \
-            GOOGLE_APPLICATION_CREDENTIALS="./vrt-gcs-credentials.json" \
-            bunx reg-suit run
-
-            open .reg/index.html
+            gcloud auth login
             ```
 
-            **必要な準備:**
-            - GCS認証ファイル: `apps/cool-app/vrt-gcs-credentials.json` を配置
+            **比較レポートをダウンロード:**
+            ```bash
+            cd apps/cool-app
+            rm -rf .reg
+            gsutil -m cp -r "gs://vrt-sample/${{ steps.comparison-keys.outputs.actual-key }}" .reg
+            open .reg/${{ steps.comparison-keys.outputs.pr-hash }}/index.html
+            ```
+
+            ---
+
+            ### 📊 詳細情報
+
+            **Base (比較元):**
+            - Branch: `${{ steps.comparison-keys.outputs.base-branch }}`
+            - Version: `${{ steps.comparison-keys.outputs.base-version }}`
+            - Commit: `${{ steps.comparison-keys.outputs.base-hash }}`
+            - GCS Key: `${{ steps.comparison-keys.outputs.expected-key }}`
+
+            **PR (比較先):**
+            - Branch: `${{ steps.comparison-keys.outputs.pr-branch }}`
+            - Version: `${{ steps.comparison-keys.outputs.pr-version }}`
+            - Commit: `${{ steps.comparison-keys.outputs.pr-hash }}`
+            - GCS Key: `${{ steps.comparison-keys.outputs.actual-key }}`
 
             ---
             *Powered by reg-suit + GitHub Pages*
