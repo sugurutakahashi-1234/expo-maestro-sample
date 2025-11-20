@@ -2,6 +2,31 @@
 
 Maestro E2Eテストとreg-suitを使ったVisual Regression Testing (VRT) の検証用リポジトリ。
 
+## 目次
+
+- [用語定義](#-用語定義)
+- [クイックスタート](#-クイックスタート)
+- [プロジェクト構成](#-構成)
+- [重要な制約](#️-重要な制約)
+- [開発コマンド](#️-開発コマンド)
+- [Maestro 重要な注意点](#️-maestro-重要な注意点)
+  - [iOS: accessibilityLabel必須](#1-ios-accessibilitylabel必須)
+  - [スクリーンショットパス指定](#2-スクリーンショットパスの指定方法)
+  - [maestro.platform活用](#3-maestroplatformを使った動的パス生成)
+  - [when条件の制約](#4-when条件はrunflowとrunscriptでのみ使用可能)
+  - [ステータスバー固定](#5-vrt-ステータスバー固定)
+- [VRT (Visual Regression Testing)](#-vrt-visual-regression-testing)
+  - [環境設定](#環境)
+  - [運用方針](#運用方針)
+  - [基本的な使い方](#基本的な使い方)
+  - [実践例](#実践例)
+- [reg-suit 運用の注意点](#-reg-suit-運用の注意点)
+  - [ローカル vs リモート運用](#2-ローカル-vs-リモート運用)
+  - [プラグイン選択](#3-プラグイン選択-reg-keygen-git-hash-vs-reg-simple-keygen)
+  - [アップロード先の選択](#4-アップロード先の選択肢と問題)
+
+---
+
 ## 📖 用語定義
 
 このドキュメントでは、以下の用語を使い分けています:
@@ -16,7 +41,35 @@ Maestro E2Eテストとreg-suitを使ったVisual Regression Testing (VRT) の�
 2. スナップショット作成 → **スナップショット**保存（`.maestro/snapshots/{branch}/{version}/{hash}/`）
 3. VRT比較 → スクリーンショット vs スナップショット、またはスナップショット同士
 
+## ⚠️ 重要な制約
+
+開発を始める前に、以下の制約を理解しておく必要があります:
+
+### 🔴 Maestro StudioとCLIの同時使用不可
+
+- Maestro Studioが起動していると、**CLIでlaunchAppが機能しない**
+- 両者が同じポート7001を使用するため競合する
+- **対策**: Maestro Studioを完全に終了してからCLIテストを実行
+
+**参考**: [GitHub Issue #1927](https://github.com/mobile-dev-inc/maestro/issues/1927)
+
+### 🔴 Maestro CLIの並列実行不可
+
+- 複数のMaestro CLIインスタンスを同時実行できない
+- すべてのインスタンスがポート7001を使用するため競合する
+- **対策**: `&&` で順次実行（例: `bun run maestro:ios && bun run maestro:android`）
+
+### 🔴 iOS: 物理デバイスは非対応
+
+- Maestroは現時点でiOSの物理デバイスをサポートしていない
+- iOSテストはシミュレータのみで実行可能
+- Androidは物理デバイスでも実行可能
+
+**参考**: [Maestro: Connecting to your device](https://docs.maestro.dev/getting-started/installing-maestro#connecting-to-your-device)
+
 ## 🚀 クイックスタート
+
+> ⚠️ **開発を始める前に**: [重要な制約](#️-重要な制約)セクションを必ず確認してください。
 
 ```bash
 # 依存関係インストール
@@ -45,32 +98,6 @@ expo-maestro-sample/
 ```
 
 Monorepo構成（Bun workspaces）
-
-## ⚠️ 重要な制約
-
-開発を始める前に、以下の制約を理解しておく必要があります:
-
-### 🔴 Maestro StudioとCLIの同時使用不可
-
-- Maestro Studioが起動していると、**CLIでlaunchAppが機能しない**
-- 両者が同じポート7001を使用するため競合する
-- **対策**: Maestro Studioを完全に終了してからCLIテストを実行
-
-**参考**: [GitHub Issue #1927](https://github.com/mobile-dev-inc/maestro/issues/1927)
-
-### 🔴 Maestro CLIの並列実行不可
-
-- 複数のMaestro CLIインスタンスを同時実行できない
-- すべてのインスタンスがポート7001を使用するため競合する
-- **対策**: `&&` で順次実行（例: `bun run maestro:ios && bun run maestro:android`）
-
-### 🔴 iOS: 物理デバイスは非対応
-
-- Maestroは現時点でiOSの物理デバイスをサポートしていない
-- iOSテストはシミュレータのみで実行可能
-- Androidは物理デバイスでも実行可能
-
-**参考**: [Maestro: Connecting to your device](https://docs.maestro.dev/getting-started/installing-maestro#connecting-to-your-device)
 
 ## 🛠️ 開発コマンド
 
@@ -207,7 +234,14 @@ React NativeのaccessibilityLabel属性を使用:
 
 ### 5. VRT: ステータスバー固定
 
-**目的**: スクリーンショット比較時に時刻やバッテリー残量の差異を防ぐ
+**目的**: VRT比較時の誤検知を防ぐ
+
+時刻やバッテリー残量は実行ごとに変わるため、ステータスバーを固定しないと毎回差分として検出されてしまいます。
+
+| 固定なし | 固定あり |
+|---------|---------|
+| ❌ 時刻・バッテリー残量の差異で毎回差分検出 | ✅ UI変更のみを検出 |
+| ❌ 実際のUI変更が埋もれる | ✅ 意図した変更を明確に把握 |
 
 **自動実行**: `bun run maestro:ios` / `bun run maestro:android` で自動的に実行されます
 
@@ -252,7 +286,55 @@ maestro test .maestro/app-flow.yaml
 
 Maestroで取得したスクリーンショットを使用して、UIの視覚的な変更を検出するシステム。
 
-### 環境
+### 🎯 設計思想
+
+#### スナップショット命名規則
+
+**構造**: `{branch}/{version}/{hash}`
+
+| 要素 | 説明 | 例 |
+|------|------|---|
+| **branch** | ブランチ名（サニタイズ済み、`/` → `_`） | `main`, `feature_new-ui` |
+| **version** | `package.json`のバージョン | `1.0.0` |
+| **hash** | コミットハッシュ短縮7文字 | `041e30c` |
+
+**具体例**:
+```
+main/1.0.0/041e30c
+feature_new-ui/1.0.0/f6e97f4
+```
+
+**選択理由**（他パターンとの比較）:
+
+| パターン | 例 | メリット | デメリット |
+|---------|---|---------|----------|
+| ハッシュのみ | `041e30c` | シンプル | 後で探しにくい |
+| ブランチ+ハッシュ | `main/041e30c` | ブランチ判別可 | バージョン不明 |
+| **フルパス** ⭐ | `main/1.0.0/041e30c` | 後で探しやすい、ローカル管理しやすい | パス長い |
+
+**採用理由**:
+- バージョン情報で後から探しやすい
+- ローカルディレクトリ管理が容易
+- パスの長さよりも可読性を優先
+
+#### ハッシュベースの自動検索
+
+スクリプトは`find`コマンドでハッシュから自動検索するため、**ブランチ名やバージョンを指定する必要なく、ハッシュだけで比較できます**。
+
+**利点**:
+- ブランチを切り替えても、過去のスナップショットと比較可能
+- ディレクトリ構造の詳細を意識する必要がない
+
+**ハッシュの確認方法**:
+```bash
+# コミットハッシュを確認
+git log --oneline -5
+
+# スナップショット一覧を表示
+find .maestro/snapshots -type d -maxdepth 3
+```
+
+### ⚙️ 環境設定
 
 | 項目 | 設定値 |
 |-----|-------|
@@ -262,6 +344,102 @@ Maestroで取得したスクリーンショットを使用して、UIの視覚�
 | **スナップショット保存先** | `.maestro/snapshots/` (Git管理外) |
 | **差分閾値** | 0.1% (`thresholdRate: 0.001`) |
 | **プラットフォーム** | iOS / Android |
+
+**差分閾値 0.1% の選択理由**:
+- アンチエイリアシング、サブピクセルレンダリングによる微小な差異を許容
+- フォントレンダリングの環境差（macOS vs Linux等）を吸収
+- 実際のUI変更は通常1%以上の差分になるため、0.1%で誤検知を防ぎつつ実変更を検出可能
+
+**検証結果**:
+- ✅ 絵文字変更（✨ → 🎉）: 検出成功
+- ✅ 環境差（同一コード、異なる実行環境）: 誤検知なし
+
+#### 設定ファイル詳細
+
+**regconfig.json** (`apps/cool-app/regconfig.json`)
+
+reg-suitの設定ファイル。プロジェクトで共有される設定です。
+
+```json
+{
+  "core": {
+    "workingDir": ".reg",              // reg-suitの作業ディレクトリ
+    "actualDir": ".maestro/screenshots", // 比較対象のスクリーンショットディレクトリ
+    "thresholdRate": 0.001              // 差分閾値 0.1%
+  },
+  "plugins": {
+    "reg-simple-keygen-plugin": {
+      // スナップショットのキー管理（環境変数で指定）
+      "expectedKey": "${EXPECTED_KEY}",  // ベースライン側のキー
+      "actualKey": "${ACTUAL_KEY}"       // 比較対象側のキー
+    },
+    "reg-publish-gcs-plugin": {
+      // Google Cloud Storageへのアップロード設定
+      "bucketName": "vrt-sample"         // GCSバケット名
+    },
+    "reg-notify-github-plugin": {
+      // GitHub連携（PRコメント、ステータスチェック）
+      "prComment": true,                 // PRにコメント投稿
+      "setCommitStatus": true            // コミットステータス設定
+    }
+  }
+}
+```
+
+**主要設定項目**:
+
+| 設定 | 値 | 説明 |
+|------|---|------|
+| `core.workingDir` | `.reg` | reg-suitの作業ディレクトリ（比較結果、レポートが保存される） |
+| `core.actualDir` | `.maestro/screenshots` | 比較対象のスクリーンショット（Maestroが生成） |
+| `core.thresholdRate` | `0.001` | 差分閾値 0.1%（微小な差異を許容） |
+| [`plugins.reg-simple-keygen-plugin`](https://github.com/reg-viz/reg-suit/tree/master/packages/reg-simple-keygen-plugin) | - | スナップショットのキー管理（フルパス形式） |
+| [`plugins.reg-publish-gcs-plugin`](https://github.com/reg-viz/reg-suit/tree/master/packages/reg-publish-gcs-plugin) | - | GCSへのアップロード設定 |
+| [`plugins.reg-notify-github-plugin`](https://github.com/reg-viz/reg-suit/tree/master/packages/reg-notify-github-plugin) | - | GitHub連携（PRコメント、ステータスチェック） |
+
+---
+
+**vrt-gcs-credentials.json** (`apps/cool-app/vrt-gcs-credentials.json`)
+
+⚠️ **運用上ほぼ不要なファイルです**
+
+GCS（Google Cloud Storage）のサービスアカウント認証情報ですが、**実際の運用ではほとんど使用しません**。
+
+**不要な理由**:
+- ✅ **CI/CDではGitHub Actions Secretsで管理**
+  - GitHub Actionsで`VRT_GCS_CREDENTIALS_JSON`として安全に管理
+  - ローカルにクレデンシャルファイルを置く必要がない
+- ✅ **ローカルからのマニュアルpublishは基本不要**
+  - VRT運用はCI/CD中心（PR作成時、mainマージ時に自動実行）
+  - ローカルでは`vrt:snapshot:local`と`vrt:compare:local:*`で完結
+
+**唯一必要になるケース**:
+- ローカルからGCSに手動でスナップショットをアップロードする場合
+- ただし**基本的に非推奨**（CI/CD経由を推奨）
+
+**実際の運用方針**:
+```bash
+# ✅ 推奨: ローカルはローカルで完結
+bun run vrt:snapshot:local
+bun run vrt:compare:local:current <expected-hash>
+
+# ❌ 非推奨: ローカルからGCSにマニュアルpublish
+# （vrt-gcs-credentials.jsonが必要）
+bun run vrt:publish:manual
+```
+
+**CI/CDでの使用方法**:
+```yaml
+# .github/workflows/vrt-pr.yml
+- name: Authenticate to Google Cloud
+  uses: google-github-actions/auth@v3
+  with:
+    credentials_json: '${{ secrets.VRT_GCS_CREDENTIALS_JSON }}'
+```
+
+GitHub Actions Secretsに`VRT_GCS_CREDENTIALS_JSON`を設定することで、ローカルファイルは不要になります。
+
+---
 
 ### 運用方針
 
@@ -278,27 +456,9 @@ Maestroで取得したスクリーンショットを使用して、UIの視覚�
 - ✅ CI/CDで自動実行（PR作成時、mainマージ時）
 - ✅ PRコメント自動投稿
 
-### スナップショット命名規則
+### 📋 基本ワークフロー
 
-```
-{branch}/{version}/{hash}
-```
-
-- **branch**: ブランチ名（サニタイズ済み、`/` → `_`）
-  - 例: `main`, `feature_new-ui`
-- **version**: `package.json`のバージョン
-  - 例: `1.0.0`
-- **hash**: コミットハッシュ短縮7文字
-  - 例: `041e30c`
-
-**具体例**:
-```
-main/1.0.0/041e30c
-feature_new-ui/1.0.0/f6e97f4
-```
-
-### 基本的な使い方
-
+**共通手順**:
 ```bash
 # 1. Maestroテスト実行（スクリーンショット取得）
 bun run maestro:ios
@@ -308,53 +468,46 @@ bun run vrt:snapshot:local
 # → .maestro/snapshots/main/1.0.0/041e30c/ に保存
 ```
 
-**3. スナップショット比較（2つの方法）**
+#### パターンA: 開発中の即座確認
 
-| 方法 | コマンド | 用途 |
-|------|----------|------|
-| **方法A: current** | `vrt:compare:local:current <hash>` | 開発中の即座確認（スナップショット作成不要） |
-| **方法B: archived** | `vrt:compare:local:archived <h1> <h2>` | 過去スナップショット同士の比較 |
+**用途**: スナップショット作成不要で素早くUI確認
 
+**コマンド**:
 ```bash
-# 方法A: 開発中の即座確認
-bun run vrt:compare:local:current 041e30c
-
-# 方法B: 過去同士の比較
-bun run vrt:compare:local:archived f6e97f4 041e30c
+bun run vrt:compare:local:current <expected-hash>
+# 例: bun run vrt:compare:local:current 041e30c
 ```
 
-**4. GCSへのパブリッシュ（オプション、チーム共有用）**
+**ユースケース**:
+- feature開発中に、mainブランチのスナップショットと比較
+- コード変更後、すぐにMaestro実行して差分確認
 
+#### パターンB: 過去スナップショット同士の比較
+
+**用途**: 異なるブランチ/バージョン間の比較
+
+**コマンド**:
+```bash
+bun run vrt:compare:local:archived <actual-hash> <expected-hash>
+# 例: bun run vrt:compare:local:archived f6e97f4 041e30c
+```
+
+**ユースケース**:
+- リリース前のmain vs 前回リリースの比較
+- 異なるブランチのスナップショット同士の比較
+
+#### GCSへのパブリッシュ（オプション）
+
+**用途**: チーム全体でスナップショットを共有
+
+**コマンド**:
 ```bash
 bun run vrt:publish:manual
 # → reg-suit runコマンドが出力される
 # → 出力されたコマンドを確認してコピー&実行
 ```
 
-### ハッシュベースの自動検索
-
-スナップショットは以下の構造で保存されます:
-
-```
-.maestro/snapshots/{branch}/{version}/{hash}/
-```
-
-スクリプトは`find`コマンドを使ってハッシュから自動検索するため、**ブランチ名やバージョンを指定する必要はなく、ハッシュだけで比較できます**。
-
-**利点**:
-- ブランチを切り替えても、過去のスナップショットと比較可能
-- ディレクトリ構造の詳細を意識する必要がない
-
-**ハッシュの確認方法**:
-```bash
-# コミットハッシュを確認
-git log --oneline -5
-
-# スナップショット一覧を表示
-find .maestro/snapshots -type d -maxdepth 3
-```
-
-### 実践例
+### 💡 実践例
 
 **基本パターン（過去同士の比較）**:
 ```bash
@@ -398,7 +551,9 @@ bun run maestro:ios
 bun run vrt:compare:local:current 041e30c
 ```
 
-### --forceフラグの使い方
+### 🔧 詳細設定
+
+#### --forceフラグの使い方
 
 デフォルトでは、`vrt:snapshot:local` は**未コミット変更がある状態では実行できません**（再現性を保つため）。
 
@@ -416,9 +571,7 @@ bun run vrt:snapshot:local:force
 - CI/CDではこのフラグを使わない（必ずコミットしてから実行）
 - 再現性が失われるため、チーム共有用のベースラインには使用しない
 
----
-
-### GCSへの手動パブリッシュ
+#### GCSへの手動パブリッシュ
 
 ローカルで作成したスナップショットをチーム全体で共有する場合、GCSにアップロードできます。
 
@@ -428,35 +581,47 @@ bun run vrt:publish:manual
 
 **出力例:**
 ```bash
-# GCSに2つのキーでパブリッシュ:
-# 1. ハッシュのみ（比較用）: 041e30c
-# 2. フルパス（保存用）: main/1.0.0/041e30c
+# GCSにフルパス形式でパブリッシュ:
+# main/1.0.0/041e30c
 
-# コマンド1: ハッシュのみのキーでパブリッシュ
-rm -rf .reg && ACTUAL_KEY=041e30c GOOGLE_APPLICATION_CREDENTIALS=./vrt-gcs-credentials.json bunx reg-suit run
-
-# コマンド2: フルパスのキーでパブリッシュ
 rm -rf .reg && ACTUAL_KEY=main/1.0.0/041e30c GOOGLE_APPLICATION_CREDENTIALS=./vrt-gcs-credentials.json bunx reg-suit run
 ```
 
 **重要:**
 - このコマンドは**reg-suit runコマンドを生成するだけ**で、実際のアップロードは行わない
 - 出力されたコマンドを確認してから、コピー&ペーストして実行する
-- 2つのキーが生成される理由は「reg-suit運用の注意点」セクションを参照
 
-**2つのキーの使い分け:**
-1. **ハッシュのみ (`041e30c`)**: CI/CDでの比較用（シンプル、検索が速い）
-2. **フルパス (`main/1.0.0/041e30c`)**: 履歴管理用（後で探しやすい）
+**このプロジェクトの命名規則:**
 
----
+このプロジェクトでは**フルパス形式** `{branch}/{version}/{hash}` を採用しています。
 
-### 検証済み項目
+```
+例: main/1.0.0/041e30c
+```
+
+**採用理由:**
+- ✅ バージョン情報で後から探しやすい
+- ✅ ローカルディレクトリ管理が容易
+- ✅ CI/CDとローカル運用の両方で一貫性を保てる
+
+**Note**: ハッシュのみのシンプルなパターン（例: `041e30c`）も技術的には可能ですが、このプロジェクトでは採用していません。
+
+<details>
+<summary>参考: 他のキーパターンとの比較</summary>
+
+| パターン | 例 | メリット | デメリット |
+|---------|---|---------|----------|
+| ハッシュのみ | `041e30c` | シンプル | 後で探しにくい |
+| ブランチ+ハッシュ | `main/041e30c` | ブランチ判別可 | バージョン不明 |
+| **フルパス** ⭐ | `main/1.0.0/041e30c` | 後で探しやすい | パス長い |
+
+</details>
+
+#### 検証済み項目
 
 - ✅ **Changed items**: 絵文字変更（✨ → 🎉）を正しく検出
 - ✅ **GCSからのベースラインダウンロード**: 正常動作
 - ✅ **差分画像生成**: 正常動作
-
----
 
 ## 🔧 reg-suit 運用の注意点
 
@@ -566,7 +731,7 @@ bun run vrt:publish:manual
 **vrt:publish:manualの動作**:
 - このコマンドは**reg-suit runコマンドを生成するだけ**
 - 実際のアップロードは行わない（安全のため）
-- 2つのGCSキー（ハッシュのみ + フルパス）を提案
+- フルパス形式 `{branch}/{version}/{hash}` のキーを使用
 - 出力されたコマンドを確認してから実行する
 
 ---
