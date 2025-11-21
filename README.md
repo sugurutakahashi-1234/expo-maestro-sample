@@ -495,27 +495,46 @@ GitHub Actions Secretsに`VRT_GCS_CREDENTIALS_JSON`を設定することで、�
 
 VRTで誤検知を防ぐため、以下の対策を実施しています:
 
-1. **スクロールバーの対策:**
-   - スクロール後、`waitForAnimationToEnd` で待機
-   - 画面の安全な場所をタップしてスクロールバーを即座に消す
-   - 再度 `waitForAnimationToEnd` でUI安定化を待機
+#### 1. スクロールバーフェード待機
+
+**問題**: スクロールバーの表示/非表示状態がランダムに変わり、VRT差分として誤検知される
+
+**対策**: `extendedWaitUntil` + `optional: true` のダミー要素トリック
 
 ```yaml
-# スクロール後の推奨パターン
-- scrollUntilVisible:
-    element:
-        text: "要素名"
-    direction: DOWN
-    timeout: 10000
+# スクロールバーフェード待機パターン（スクリーンショット取得直前）
 - waitForAnimationToEnd
-- tapOn:
-    point: "50%,30%"  # スクロールバーを消す
-- waitForAnimationToEnd
+# スクロールバーフェード待機（3秒固定）
+- extendedWaitUntil:
+    visible: "SCROLLBAR_FADE_WAIT_DUMMY"
+    timeout: 3000
+    optional: true
+- takeScreenshot: path/to/screenshot
 ```
 
-2. **テキスト入力後のカーソル対策:**
-   - 入力完了後、入力フィールド以外の要素をタップしてフォーカスを解除
-   - カーソルのブリンク（点滅）を停止させてからスクリーンショット取得
+**注意**: このパターンは **Maestro非推奨** です
+
+Maestroは"artificial wait blocks"を設計思想として避けていますが、スクロールバーはシステムレベルのUI要素で直接検出できないため、この方法を採用しています。
+
+**参考**:
+- [Maestro Issue #1542: Feature Request - Wait/Sleep command](https://github.com/mobile-dev-inc/maestro/issues/1542)
+- [Maestro Issue #1592: Add delay between steps](https://github.com/mobile-dev-inc/maestro/issues/1592)
+- [Maestro Documentation: extendedWaitUntil](https://docs.maestro.dev/api-reference/commands/extendedwaituntil)
+- [Maestro Documentation: optional parameter](https://docs.maestro.dev/api-reference/common-commands-arguments)
+
+**Maestroの設計思想**:
+> "By design, Maestro highly discourages a pattern of introducing artificial wait blocks as we believe that Maestro is already handling that reasonably well."
+
+しかし、VRT用途では以下の理由から固定wait（ダミー要素トリック）が必要:
+- スクロールバーにはtext、id、accessibilityLabelがない
+- `waitForAnimationToEnd`ではスクロールバーフェードを検出できない
+- iOS/Androidのスクロールバー自動フェード（300ms〜3秒）を確実に待つ必要がある
+
+#### 2. テキスト入力後のカーソル対策
+
+**問題**: カーソルの点滅がVRT差分として検出される
+
+**対策**: 入力フィールド以外をタップしてフォーカスを解除 + ダミー要素トリックで完全停止を待つ
 
 ```yaml
 # テキスト入力後の推奨パターン
@@ -525,13 +544,21 @@ VRTで誤検知を防ぐため、以下の対策を実施しています:
 - hideKeyboard
 - tapOn: "ページタイトル"  # フォーカス解除
 - waitForAnimationToEnd
+# カーソルブリンク完全停止待機（3秒固定）
+- extendedWaitUntil:
+    visible: "CURSOR_BLINK_WAIT_DUMMY"
+    timeout: 3000
+    optional: true
 - takeScreenshot: path/to/screenshot
 ```
 
-3. **差分閾値の設定:**
-   - `thresholdRate: 0.001`（0.1%）に設定
-   - アンチエイリアシング、サブピクセルレンダリングなどの微小差異を許容
-   - 実際のUI変更を確実に検出
+**注意**: tapOnだけではカーソルブリンクが即座に停止しないため、3秒待機が必要です。ダミー要素トリックはMaestro非推奨パターンですが、カーソルブリンクは直接検出できないため使用しています。
+
+#### 3. 差分閾値の設定
+
+- `thresholdRate: 0.001`（0.1%）に設定
+- アンチエイリアシング、サブピクセルレンダリングなどの微小差異を許容
+- 実際のUI変更を確実に検出
 
 ### 📋 基本ワークフロー
 

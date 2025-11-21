@@ -57,6 +57,17 @@ appId: com.sugurutakahashi.coolapp
 #    - package.jsonの statusbar:ios と statusbar:android スクリプトで自動設定
 #    - maestro:ios と maestro:android 実行時に自動で適用される
 #
+# 9. VRT: スクロールバーフェード待機 & カーソルブリンク停止待機
+#    - スクロールバーの表示状態がVRT差分として検出されるのを防ぐため、
+#      スクリーンショット取得前にスクロールバーが完全に消えるまで待機する
+#    - カーソルブリンクも同様に、tapOnでフォーカス解除後、完全に停止するまで待機
+#    - 実装: extendedWaitUntil + optional: true のダミー要素トリック
+#      - スクロールバー: SCROLLBAR_FADE_WAIT_DUMMY (3秒)
+#      - カーソルブリンク: CURSOR_BLINK_WAIT_DUMMY (3秒、tapOn後)
+#    - 参考: https://github.com/mobile-dev-inc/maestro/issues/1542
+#    - 注意: Maestro非推奨パターン（artificial wait discouraged）だが、
+#      スクロールバーとカーソルは直接検出不可のため、固定wait（3秒）を使用
+#
 # ==========================================
 
 - launchApp:
@@ -70,6 +81,12 @@ appId: com.sugurutakahashi.coolapp
 - assertVisible: "Expo モノレポ with Bun 🎉"
 - assertVisible: "📚 記事リスト"
 - waitForAnimationToEnd
+# スクロールバーフェード待機（ダミー要素トリック）
+# Note: Maestro非推奨パターンだが、スクロールバーは直接検出不可のため使用
+- extendedWaitUntil:
+    visible: "SCROLLBAR_FADE_WAIT_DUMMY"
+    timeout: 3000
+    optional: true
 - takeScreenshot: .maestro/screenshots/${output.platform}/home-tab
 
 # 記事リストの確認と詳細画面への遷移
@@ -94,18 +111,33 @@ appId: com.sugurutakahashi.coolapp
 - tapOn: "遷移"
 - assertVisible: "画面遷移デモ"
 - waitForAnimationToEnd
+# スクロールバーフェード待機（ダミー要素トリック）
+- extendedWaitUntil:
+    visible: "SCROLLBAR_FADE_WAIT_DUMMY"
+    timeout: 3000
+    optional: true
 - takeScreenshot: .maestro/screenshots/${output.platform}/transition-tab
 
 # タブナビゲーションのテスト - このアプリについて
 - tapOn: "このアプリについて"
 - assertVisible: "このアプリについての説明"
 - waitForAnimationToEnd
+# スクロールバーフェード待機（ダミー要素トリック）
+- extendedWaitUntil:
+    visible: "SCROLLBAR_FADE_WAIT_DUMMY"
+    timeout: 3000
+    optional: true
 - takeScreenshot: .maestro/screenshots/${output.platform}/about-tab
 
 # タブナビゲーションのテスト - プロフィール
 - tapOn: "プロフィール"
 - assertVisible: "ユーザー情報"
 - waitForAnimationToEnd
+# スクロールバーフェード待機（ダミー要素トリック）
+- extendedWaitUntil:
+    visible: "SCROLLBAR_FADE_WAIT_DUMMY"
+    timeout: 3000
+    optional: true
 - takeScreenshot: .maestro/screenshots/${output.platform}/profile-tab
 # ホームに戻る
 - tapOn: "ホーム"
@@ -117,14 +149,6 @@ appId: com.sugurutakahashi.coolapp
         text: "ログインデモ (Maestroテスト用)"
     direction: DOWN
     timeout: 10000
-
-# スクロールバーが消えるまで待機
-- waitForAnimationToEnd
-# 画面の安全な場所をタップしてスクロールバーを即座に消す
-- tapOn:
-    point: "50%,30%"
-# UI安定化を待機
-- waitForAnimationToEnd
 
 # ログイン画面のテキスト入力テスト
 - tapOn: "ログインデモ (Maestroテスト用)"
@@ -154,6 +178,11 @@ appId: com.sugurutakahashi.coolapp
 - tapOn: "Maestroテキスト入力デモ"
 # UI安定化を待機
 - waitForAnimationToEnd
+# カーソルブリンク完全停止待機（ダミー要素トリック）
+- extendedWaitUntil:
+    visible: "CURSOR_BLINK_WAIT_DUMMY"
+    timeout: 3000
+    optional: true
 
 # 入力完了後のスクリーンショット
 - takeScreenshot: .maestro/screenshots/${output.platform}/login-form-filled
@@ -167,6 +196,11 @@ appId: com.sugurutakahashi.coolapp
 
 # ログイン成功のスクリーンショット
 - waitForAnimationToEnd
+# スクロールバーフェード待機（ダミー要素トリック）
+- extendedWaitUntil:
+    visible: "SCROLLBAR_FADE_WAIT_DUMMY"
+    timeout: 3000
+    optional: true
 - takeScreenshot: .maestro/screenshots/${output.platform}/login-success
 
 # アラートを閉じる
