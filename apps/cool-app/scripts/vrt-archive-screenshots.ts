@@ -1,7 +1,7 @@
 import { $ } from "bun";
 import { existsSync } from "fs";
 
-const SNAPSHOTS_BASE_DIR = ".maestro/snapshots";
+const SCREENSHOTS_ARCHIVE_DIR = ".maestro/screenshots-archive";
 const SCREENSHOTS_DIR = ".maestro/screenshots";
 
 try {
@@ -31,8 +31,8 @@ try {
     .replace(/[^a-zA-Z0-9._-]/g, "_");
   const hash = (await $`git rev-parse --short=7 HEAD`.text()).trim();
 
-  // スナップショットディレクトリ名を生成
-  const snapshotDir = `${SNAPSHOTS_BASE_DIR}/${branch}/${version}/${hash}`;
+  // スクリーンショットアーカイブディレクトリ名を生成
+  const archiveDir = `${SCREENSHOTS_ARCHIVE_DIR}/${branch}/${version}/${hash}`;
   // スクリーンショットディレクトリの存在確認
   if (!existsSync(SCREENSHOTS_DIR)) {
     console.error(`❌ Error: Screenshots directory not found: ${SCREENSHOTS_DIR}`);
@@ -40,20 +40,20 @@ try {
     process.exit(1);
   }
 
-  // 既存のスナップショットディレクトリがあれば削除
-  if (existsSync(snapshotDir)) {
-    console.log(`🗑️  Removing existing snapshot: ${snapshotDir}`);
-    await $`rm -rf ${snapshotDir}`;
+  // 既存のスクリーンショットアーカイブディレクトリがあれば削除
+  if (existsSync(archiveDir)) {
+    console.log(`🗑️  Removing existing screenshot archive: ${archiveDir}`);
+    await $`rm -rf ${archiveDir}`;
   }
 
-  // スナップショットディレクトリを作成
-  await $`mkdir -p ${snapshotDir}`;
+  // スクリーンショットアーカイブディレクトリを作成
+  await $`mkdir -p ${archiveDir}`;
 
   // スクリーンショットをコピー
-  await $`cp -r ${SCREENSHOTS_DIR}/. ${snapshotDir}/`;
+  await $`cp -r ${SCREENSHOTS_DIR}/. ${archiveDir}/`;
 
-  console.log(`✅ Snapshot saved: ${snapshotDir}`);
+  console.log(`✅ Screenshot archive saved: ${archiveDir}`);
 } catch (error) {
-  console.error("❌ Error creating snapshot:", error);
+  console.error("❌ Error creating screenshot archive:", error);
   process.exit(1);
 }

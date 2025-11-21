@@ -9,12 +9,12 @@ Maestro E2Eテストとreg-suitを使ったVisual Regression Testing (VRT) の�
 | 用語 | 意味 | 保存場所 | 説明 |
 |------|------|----------|------|
 | **スクリーンショット** | Maestroが生成する画像 | `.maestro/screenshots/` | E2Eテスト実行時に毎回生成される一時的な画像 |
-| **スナップショット** | 版管理された基準画像 | `.maestro/snapshots/` | VRT比較の基準として保存される画像（Git管理外） |
+| **スクリーンショットアーカイブ** | 版管理された基準画像 | `.maestro/screenshots-archive/` | VRT比較の基準として保存される画像（Git管理外） |
 
 **ワークフロー**:
 1. Maestroテスト実行 → **スクリーンショット**生成（`.maestro/screenshots/`）
-2. スナップショット作成 → **スナップショット**保存（`.maestro/snapshots/{branch}/{version}/{hash}/`）
-3. VRT比較 → スクリーンショット vs スナップショット、またはスナップショット同士
+2. スクリーンショットアーカイブ作成 → **スクリーンショットアーカイブ**保存（`.maestro/screenshots-archive/{branch}/{version}/{hash}/`）
+3. VRT比較 → スクリーンショット vs スクリーンショットアーカイブ、またはスクリーンショットアーカイブ同士
 
 ## ⚠️ 重要な制約
 
@@ -95,10 +95,10 @@ cd apps/cool-app
 bun run maestro:ios                      # Maestro iOS E2Eテスト
 bun run maestro:android                  # Maestro Android E2Eテスト
 bun run maestro:all                      # iOS → Android 順次実行
-bun run vrt:snapshot:local               # スナップショット作成
-bun run vrt:snapshot:local:force         # 未コミット変更時も強制作成
-bun run vrt:compare:local:current <hash> # 現在のスクリーンショット vs 過去のスナップショット
-bun run vrt:compare:local:archived <h1> <h2> # 過去のスナップショット vs 過去のスナップショット
+bun run vrt:archive:local                # スクリーンショットアーカイブ作成
+bun run vrt:archive:local:force          # 未コミット変更時も強制作成
+bun run vrt:compare:local:current <hash> # 現在のスクリーンショット vs 過去のスクリーンショットアーカイブ
+bun run vrt:compare:local:archived <h1> <h2> # 過去のスクリーンショットアーカイブ vs 過去のスクリーンショットアーカイブ
 bun run vrt:publish:manual               # GCSパブリッシュコマンド生成
 ```
 
@@ -313,7 +313,7 @@ Maestroで取得したスクリーンショットを使用して、UIの視覚�
 
 ### 🎯 設計思想
 
-#### スナップショット命名規則
+#### スクリーンショットアーカイブ命名規則
 
 **構造**: `{branch}/{version}/{hash}`
 
@@ -347,7 +347,7 @@ feature_new-ui/1.0.0/f6e97f4
 スクリプトは`find`コマンドでハッシュから自動検索するため、**ブランチ名やバージョンを指定する必要なく、ハッシュだけで比較できます**。
 
 **利点**:
-- ブランチを切り替えても、過去のスナップショットと比較可能
+- ブランチを切り替えても、過去のスクリーンショットアーカイブと比較可能
 - ディレクトリ構造の詳細を意識する必要がない
 
 **ハッシュの確認方法**:
@@ -355,8 +355,8 @@ feature_new-ui/1.0.0/f6e97f4
 # コミットハッシュを確認
 git log --oneline -5
 
-# スナップショット一覧を表示
-find .maestro/snapshots -type d -maxdepth 3
+# スクリーンショットアーカイブ一覧を表示
+find .maestro/screenshots-archive -type d -maxdepth 3
 ```
 
 ### ⚙️ 環境設定
@@ -366,7 +366,7 @@ find .maestro/snapshots -type d -maxdepth 3
 | **ツール** | reg-suit + Google Cloud Storage |
 | **バケット** | `vrt-sample` (asia-northeast1) |
 | **認証** | `apps/cool-app/vrt-gcs-credentials.json` |
-| **スナップショット保存先** | `.maestro/snapshots/` (Git管理外) |
+| **スクリーンショットアーカイブ保存先** | `.maestro/screenshots-archive/` (Git管理外) |
 | **差分閾値** | 0.1% (`thresholdRate: 0.001`) |
 | **プラットフォーム** | iOS / Android |
 
@@ -390,7 +390,7 @@ reg-suitの設定ファイル。プロジェクトで共有される設定です
   },
   "plugins": {
     "reg-simple-keygen-plugin": {
-      // スナップショットのキー管理（環境変数で指定）
+      // スクリーンショットアーカイブのキー管理（環境変数で指定）
       "expectedKey": "${EXPECTED_KEY}",  // ベースライン側のキー
       "actualKey": "${ACTUAL_KEY}"       // 比較対象側のキー
     },
@@ -414,7 +414,7 @@ reg-suitの設定ファイル。プロジェクトで共有される設定です
 | `core.workingDir` | `.reg` | reg-suitの作業ディレクトリ（比較結果、レポートが保存される） |
 | `core.actualDir` | `.maestro/screenshots` | 比較対象のスクリーンショット（Maestroが生成） |
 | `core.thresholdRate` | `0.001` | 差分閾値 0.1%（微小な差異を許容） |
-| [`plugins.reg-simple-keygen-plugin`](https://github.com/reg-viz/reg-suit/tree/master/packages/reg-simple-keygen-plugin) | - | スナップショットのキー管理（フルパス形式） |
+| [`plugins.reg-simple-keygen-plugin`](https://github.com/reg-viz/reg-suit/tree/master/packages/reg-simple-keygen-plugin) | - | スクリーンショットアーカイブのキー管理（フルパス形式） |
 | [`plugins.reg-publish-gcs-plugin`](https://github.com/reg-viz/reg-suit/tree/master/packages/reg-publish-gcs-plugin) | - | GCSへのアップロード設定 |
 | [`plugins.reg-notify-github-plugin`](https://github.com/reg-viz/reg-suit/tree/master/packages/reg-notify-github-plugin) | - | GitHub連携（PRコメント、ステータスチェック） |
 
@@ -432,16 +432,16 @@ GCS（Google Cloud Storage）のサービスアカウント認証情報ですが
   - ローカルにクレデンシャルファイルを置く必要がない
 - ✅ **ローカルからのマニュアルpublishは基本不要**
   - VRT運用はCI/CD中心（PR作成時、mainマージ時に自動実行）
-  - ローカルでは`vrt:snapshot:local`と`vrt:compare:local:*`で完結
+  - ローカルでは`vrt:archive:local`と`vrt:compare:local:*`で完結
 
 **唯一必要になるケース**:
-- ローカルからGCSに手動でスナップショットをアップロードする場合
+- ローカルからGCSに手動でスクリーンショットアーカイブをアップロードする場合
 - ただし**基本的に非推奨**（CI/CD経由を推奨）
 
 **実際の運用方針**:
 ```bash
 # ✅ 推奨: ローカルはローカルで完結
-bun run vrt:snapshot:local
+bun run vrt:archive:local
 bun run vrt:compare:local:current <expected-hash>
 
 # ❌ 非推奨: ローカルからGCSにマニュアルpublish
@@ -472,8 +472,8 @@ GitHub Actions Secretsに`VRT_GCS_CREDENTIALS_JSON`を設定することで、�
 | **リモート** | reg-suit + GCS | CI/CD、チーム共有 | GitHub Actions |
 
 **運用の特徴**:
-- ✅ 必要なタイミングで手動でスナップショット作成
-- ✅ 任意のスナップショット同士を比較可能
+- ✅ 必要なタイミングで手動でスクリーンショットアーカイブ作成
+- ✅ 任意のスクリーンショットアーカイブ同士を比較可能
 - ✅ CI/CDで自動実行（PR作成時、mainマージ時）
 - ✅ PRコメント自動投稿
 
@@ -484,14 +484,14 @@ GitHub Actions Secretsに`VRT_GCS_CREDENTIALS_JSON`を設定することで、�
 # 1. Maestroテスト実行（スクリーンショット取得）
 bun run maestro:ios
 
-# 2. スナップショット作成
-bun run vrt:snapshot:local
-# → .maestro/snapshots/main/1.0.0/041e30c/ に保存
+# 2. スクリーンショットアーカイブ作成
+bun run vrt:archive:local
+# → .maestro/screenshots-archive/main/1.0.0/041e30c/ に保存
 ```
 
 #### パターンA: 開発中の即座確認
 
-**用途**: スナップショット作成不要で素早くUI確認
+**用途**: スクリーンショットアーカイブ作成不要で素早くUI確認
 
 **コマンド**:
 ```bash
@@ -500,10 +500,10 @@ bun run vrt:compare:local:current <expected-hash>
 ```
 
 **ユースケース**:
-- feature開発中に、mainブランチのスナップショットと比較
+- feature開発中に、mainブランチのスクリーンショットアーカイブと比較
 - コード変更後、すぐにMaestro実行して差分確認
 
-#### パターンB: 過去スナップショット同士の比較
+#### パターンB: 過去スクリーンショットアーカイブ同士の比較
 
 **用途**: 異なるブランチ/バージョン間の比較
 
@@ -515,21 +515,21 @@ bun run vrt:compare:local:archived <actual-hash> <expected-hash>
 
 **ユースケース**:
 - リリース前のmain vs 前回リリースの比較
-- 異なるブランチのスナップショット同士の比較
+- 異なるブランチのスクリーンショットアーカイブ同士の比較
 
 ### 💡 実践例
 
 **基本パターン（過去同士の比較）**:
 ```bash
-# 1. ベースラインブランチでスナップショット作成
+# 1. ベースラインブランチでスクリーンショットアーカイブ作成
 git checkout <base-branch>
 bun run maestro:ios
-bun run vrt:snapshot:local
+bun run vrt:archive:local
 
-# 2. 比較対象ブランチでスナップショット作成
+# 2. 比較対象ブランチでスクリーンショットアーカイブ作成
 git checkout <target-branch>
 bun run maestro:ios
-bun run vrt:snapshot:local
+bun run vrt:archive:local
 
 # 3. 比較実行
 bun run vrt:compare:local:archived <target-hash> <base-hash>
@@ -540,10 +540,10 @@ bun run vrt:compare:local:archived <target-hash> <base-hash>
 **開発中の即座確認（方法A）**:
 
 ```bash
-# 1. mainのスナップショットを作成（1回だけ）
+# 1. mainのスクリーンショットアーカイブを作成（1回だけ）
 git checkout main
 bun run maestro:ios
-bun run vrt:snapshot:local
+bun run vrt:archive:local
 # main-hash を記録: 例 041e30c
 
 # 2. featureブランチで開発
@@ -552,11 +552,11 @@ git checkout feature/new-ui
 # 3. コードを変更後、Maestro実行
 bun run maestro:ios
 
-# 4. mainと比較（スナップショット作成不要）
+# 4. mainと比較（スクリーンショットアーカイブ作成不要）
 bun run vrt:compare:local:current 041e30c
 
 # 5. コードを修正 → 再度Maestro実行 → 比較
-# スナップショット作成なしで素早く確認できる
+# スクリーンショットアーカイブ作成なしで素早く確認できる
 bun run maestro:ios
 bun run vrt:compare:local:current 041e30c
 ```
@@ -565,17 +565,17 @@ bun run vrt:compare:local:current 041e30c
 
 #### --forceフラグの使い方
 
-デフォルトでは、`vrt:snapshot:local` は**未コミット変更がある状態では実行できません**（再現性を保つため）。
+デフォルトでは、`vrt:archive:local` は**未コミット変更がある状態では実行できません**（再現性を保つため）。
 
-未コミット変更がある状態でスナップショットを作成する場合:
+未コミット変更がある状態でスクリーンショットアーカイブを作成する場合:
 
 ```bash
-bun run vrt:snapshot:local:force
+bun run vrt:archive:local:force
 ```
 
 **用途:**
 - ローカル開発中の即座のUI確認が必要な場合
-- WIP状態でもスナップショットを作成したい場合
+- WIP状態でもスクリーンショットアーカイブを作成したい場合
 
 **注意:**
 - CI/CDではこのフラグを使わない（必ずコミットしてから実行）
@@ -583,7 +583,7 @@ bun run vrt:snapshot:local:force
 
 #### GCSへの手動パブリッシュ
 
-ローカルで作成したスナップショットをチーム全体で共有する場合、GCSにアップロードできます。
+ローカルで作成したスクリーンショットアーカイブをチーム全体で共有する場合、GCSにアップロードできます。
 
 ```bash
 bun run vrt:publish:manual
@@ -600,7 +600,7 @@ rm -rf .reg && ACTUAL_KEY=main/1.0.0/041e30c GOOGLE_APPLICATION_CREDENTIALS=./vr
 **重要:**
 - このコマンドは**reg-suit runコマンドを生成するだけ**で、実際のアップロードは行わない
 - 出力されたコマンドを確認してから、コピー&ペーストして実行する
-- このプロジェクトの命名規則については[スナップショット命名規則](#スナップショット命名規則)を参照
+- このプロジェクトの命名規則については[スクリーンショットアーカイブ命名規則](#スクリーンショットアーカイブ命名規則)を参照
 
 #### 検証済み項目
 
@@ -651,7 +651,7 @@ GitHub ActionsのPRイベントでは**detached HEAD状態**でチェックア�
 
 **概要**:
 - 各バージョンのスクリーンショット出力をローカルにコピーしながら実施
-- `.maestro/snapshots/` にバージョン管理
+- `.maestro/screenshots-archive/` にバージョン管理
 
 **メリット**:
 - ✅ 完全にローカルで閉じられる
@@ -667,8 +667,8 @@ GitHub ActionsのPRイベントでは**detached HEAD状態**でチェックア�
 
 **使用コマンド**:
 ```bash
-# スナップショット作成
-bun run vrt:snapshot:local
+# スクリーンショットアーカイブ作成
+bun run vrt:archive:local
 
 # 比較（2パターン用意）
 bun run vrt:compare:local:current <expected-hash>
@@ -682,31 +682,31 @@ bun run vrt:compare:local:archived <actual-hash> <expected-hash>
 **概要**:
 - GCSやS3などを用いて、リモート環境にローカルで実施したテスト結果をアップロード
 - 事前にローカルでMaestroを動かし、その結果をpush
-- PR対象のブランチのスナップショットファイルと比較
+- PR対象のブランチのスクリーンショットアーカイブファイルと比較
 
 **メリット**:
 - ✅ CI上で確認できる
 - ✅ チーム全体で共有できる
-- ✅ GitHubで1つのディレクトリでスナップショットを保持
+- ✅ GitHubで1つのディレクトリでスクリーンショットアーカイブを保持
 
 **デメリット**:
-- ❌ マージ後にスナップショットを撮り直してアップロードできない（mainブランチで再実行が必要）
+- ❌ マージ後にスクリーンショットアーカイブを撮り直してアップロードできない（mainブランチで再実行が必要）
 - ❌ アップロード先の問題（後述）が発生
 
 **フロー**:
 1. ローカルでMaestro実行
-2. スナップショットを作成
+2. スクリーンショットアーカイブを作成
 3. `vrt:publish:manual`でGCS/S3にアップロード
 4. PRでベースブランチと比較
-5. マージ後、mainでスナップショット再作成・アップロード
+5. マージ後、mainでスクリーンショットアーカイブ再作成・アップロード
 
 **使用コマンド**:
 ```bash
 # 1. Maestroテスト実行
 bun run maestro:ios
 
-# 2. スナップショット作成
-bun run vrt:snapshot:local
+# 2. スクリーンショットアーカイブ作成
+bun run vrt:archive:local
 
 # 3. GCSへのパブリッシュコマンド生成
 bun run vrt:publish:manual
@@ -733,7 +733,7 @@ bun run vrt:publish:manual
 **注意点**:
 - 事前に期待値（baseline）をアップロードする必要がある
 - mainブランチのpushをトリガーにベースラインを上げる仕組みが必要
-- パス名設計思想については[スナップショット命名規則](#スナップショット命名規則)を参照
+- パス名設計思想については[スクリーンショットアーカイブ命名規則](#スクリーンショットアーカイブ命名規則)を参照
 
 ---
 

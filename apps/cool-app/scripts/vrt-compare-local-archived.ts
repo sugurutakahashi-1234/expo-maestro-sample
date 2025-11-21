@@ -1,6 +1,6 @@
 import { $ } from "bun";
 
-const SNAPSHOTS_BASE_DIR = ".maestro/snapshots";
+const SCREENSHOTS_ARCHIVE_DIR = ".maestro/screenshots-archive";
 const DIFF_DIR = ".reg/local/diff";
 const REPORT_HTML = ".reg/local/index.html";
 const REPORT_JSON = ".reg/local/reg.json";
@@ -13,8 +13,8 @@ const args = process.argv.slice(2);
  * findコマンドを使って指定されたハッシュのディレクトリを見つける
  * ブランチやバージョンが異なる場合でも検索可能
  */
-async function findSnapshotByHash(hash: string): Promise<string | null> {
-  const result = await $`find ${SNAPSHOTS_BASE_DIR} -type d -name ${hash}`.text();
+async function findArchiveByHash(hash: string): Promise<string | null> {
+  const result = await $`find ${SCREENSHOTS_ARCHIVE_DIR} -type d -name ${hash}`.text();
   const paths = result.trim().split("\n").filter(Boolean);
   return paths[0] || null;
 }
@@ -25,30 +25,30 @@ async function findSnapshotByHash(hash: string): Promise<string | null> {
       console.error("Usage: bun run vrt:compare:local:archived <actual-hash> <expected-hash>");
       console.error("Example: bun run vrt:compare:local:archived f6e97f4 041e30c");
       console.error("");
-      console.error("This compares two archived snapshots:");
-      console.error("  - Actual: .maestro/snapshots/<branch>/<version>/<actual-hash>");
-      console.error("  - Expected: .maestro/snapshots/<branch>/<version>/<expected-hash>");
+      console.error("This compares two archived screenshot archives:");
+      console.error("  - Actual: .maestro/screenshots-archive/<branch>/<version>/<actual-hash>");
+      console.error("  - Expected: .maestro/screenshots-archive/<branch>/<version>/<expected-hash>");
       process.exit(1);
     }
 
     const [actualHash, expectedHash] = args;
 
-    const expectedSnapshot = await findSnapshotByHash(expectedHash);
-    const actualSnapshot = await findSnapshotByHash(actualHash);
+    const expectedArchive = await findArchiveByHash(expectedHash);
+    const actualArchive = await findArchiveByHash(actualHash);
 
-    if (!expectedSnapshot) {
-      console.error(`❌ Snapshot not found for hash: ${expectedHash}`);
+    if (!expectedArchive) {
+      console.error(`❌ Screenshot archive not found for hash: ${expectedHash}`);
       process.exit(1);
     }
 
-    if (!actualSnapshot) {
-      console.error(`❌ Snapshot not found for hash: ${actualHash}`);
+    if (!actualArchive) {
+      console.error(`❌ Screenshot archive not found for hash: ${actualHash}`);
       process.exit(1);
     }
 
     console.log("📊 Running VRT comparison...");
-    console.log(`Actual: ${actualSnapshot}`);
-    console.log(`Expected: ${expectedSnapshot}`);
+    console.log(`Actual: ${actualArchive}`);
+    console.log(`Expected: ${expectedArchive}`);
     console.log("");
 
     // Ensure output directories exist
@@ -56,14 +56,14 @@ async function findSnapshotByHash(hash: string): Promise<string | null> {
     await $`mkdir -p $(dirname ${REPORT_HTML})`;
 
     // Show the command that will be executed
-    const command = `bunx reg-cli ${actualSnapshot} ${expectedSnapshot} ${DIFF_DIR} -R ${REPORT_HTML} -J ${REPORT_JSON} -T ${THRESHOLD}`;
+    const command = `bunx reg-cli ${actualArchive} ${expectedArchive} ${DIFF_DIR} -R ${REPORT_HTML} -J ${REPORT_JSON} -T ${THRESHOLD}`;
     console.log("🔧 Executing command:");
     console.log(command);
     console.log("");
 
     // Run reg-cli
     try {
-      await $`bunx reg-cli ${actualSnapshot} ${expectedSnapshot} ${DIFF_DIR} -R ${REPORT_HTML} -J ${REPORT_JSON} -T ${THRESHOLD}`;
+      await $`bunx reg-cli ${actualArchive} ${expectedArchive} ${DIFF_DIR} -R ${REPORT_HTML} -J ${REPORT_JSON} -T ${THRESHOLD}`;
       console.log("✅ No differences detected");
     } catch (error) {
       // reg-cli exits with non-zero when differences are found

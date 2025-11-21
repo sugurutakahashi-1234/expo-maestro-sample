@@ -98,11 +98,11 @@ jobs:
       # 理由: "Compare with baseline" ステップで `reg-suit run` を実行すると、
       # 自動的に compare + publish + notify が実行されるため、事前アップロードは不要。
       # このステップを実行すると以下の問題が発生する：
-      # 1. 同じスナップショットが2回アップロードされる（無駄）
+      # 1. 同じスクリーンショットアーカイブが2回アップロードされる（無駄）
       # 2. 2つの GitHub ステータスチェックが作成される（重複表示）
       # 3. 処理時間が増加する
       #
-      # - name: Publish PR snapshot to GCS (2 keys)
+      # - name: Publish PR screenshot archive to GCS (2 keys)
       #   working-directory: apps/cool-app
       #   run: |
       #     # ハッシュのみのキー（比較用）
