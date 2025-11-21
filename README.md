@@ -282,22 +282,35 @@ React NativeのaccessibilityLabel属性を使用:
 DEVICE_ID=$(xcrun simctl list devices booted | grep -o '[A-F0-9-]\{36\}' | head -1)
 xcrun simctl status_bar $DEVICE_ID override \
   --time '9:41' \
+  --dataNetwork wifi \
+  --wifiMode active \
+  --wifiBars 3 \
+  --operatorName "" \
   --batteryState charged \
   --batteryLevel 100 \
   --cellularMode active \
-  --cellularBars 4 \
-  --wifiBars 3
+  --cellularBars 4
 ```
+
+**追加されたパラメータ**:
+- `--dataNetwork wifi`: データネットワークをWi-Fiに固定
+- `--wifiMode active`: Wi-Fiモードをアクティブに固定
+- `--operatorName ""`: キャリア名を空に（表示の揺らぎを防止）
 
 **Android**:
 ```bash
 adb shell settings put global sysui_demo_allowed 1
+adb shell am broadcast -a com.android.systemui.demo -e command enter
 adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 0941
 adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false
 adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4
+adb shell am broadcast -a com.android.systemui.demo -e command network -e mobile show -e datatype none -e level 4
 adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false
-adb shell am broadcast -a com.android.systemui.demo -e command enter
 ```
+
+**改善点**:
+- `enter` コマンドを最初に実行（Demo Modeに入ってから設定を適用）
+- モバイルネットワークの明示的な設定を追加（`-e mobile show -e datatype none`）
 
 **手動分割実行**:
 ```bash
@@ -367,13 +380,15 @@ find .maestro/screenshots-archive -type d -maxdepth 3
 | **バケット** | `vrt-sample` (asia-northeast1) |
 | **認証** | `apps/cool-app/vrt-gcs-credentials.json` |
 | **スクリーンショットアーカイブ保存先** | `.maestro/screenshots-archive/` (Git管理外) |
-| **差分閾値** | 0.1% (`thresholdRate: 0.001`) |
+| **差分閾値** | 0.5% (`thresholdRate: 0.005`) |
 | **プラットフォーム** | iOS / Android |
 
-**差分閾値 0.1% の選択理由**:
+**差分閾値 0.5% の選択理由**:
 - アンチエイリアシング、サブピクセルレンダリングによる微小な差異を許容
 - フォントレンダリングの環境差（macOS vs Linux等）を吸収
-- 実際のUI変更は通常1%以上の差分になるため、0.1%で誤検知を防ぎつつ実変更を検出可能
+- **スクロールバーの位置ずれ、テキストカーソルのブリンクなどを許容**
+- 実際のUI変更は通常1%以上の差分になるため、0.5%でも実変更を確実に検出可能
+- より実用的な運用を実現（過剰な誤検知を防止）
 
 #### 設定ファイル詳細
 

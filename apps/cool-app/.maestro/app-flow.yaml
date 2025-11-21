@@ -118,6 +118,14 @@ appId: com.sugurutakahashi.coolapp
     direction: DOWN
     timeout: 10000
 
+# スクロールバーが消えるまで待機
+- waitForAnimationToEnd
+# 画面の安全な場所をタップしてスクロールバーを即座に消す
+- tapOn:
+    point: "50%,30%"
+# UI安定化を待機
+- waitForAnimationToEnd
+
 # ログイン画面のテキスト入力テスト
 - tapOn: "ログインデモ (Maestroテスト用)"
 - assertVisible: "ログイン"
@@ -142,8 +150,12 @@ appId: com.sugurutakahashi.coolapp
 - assertVisible:
     id: "password-display"
 
-# 入力完了後のスクリーンショット
+# タイトルをタップしてフォーカスを解除（カーソルブリンク停止）
+- tapOn: "Maestroテキスト入力デモ"
+# UI安定化を待機
 - waitForAnimationToEnd
+
+# 入力完了後のスクリーンショット
 - takeScreenshot: .maestro/screenshots/${output.platform}/login-form-filled
 
 # ログインボタンをタップ
