@@ -292,7 +292,6 @@ xcrun simctl status_bar $DEVICE_ID override \
   --cellularBars 4
 ```
 
-**追加されたパラメータ**:
 - `--dataNetwork wifi`: データネットワークをWi-Fiに固定
 - `--wifiMode active`: Wi-Fiモードをアクティブに固定
 - `--operatorName ""`: キャリア名を空に（表示の揺らぎを防止）
@@ -308,7 +307,6 @@ adb shell am broadcast -a com.android.systemui.demo -e command network -e mobile
 adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false
 ```
 
-**改善点**:
 - `enter` コマンドを最初に実行（Demo Modeに入ってから設定を適用）
 - モバイルネットワークの明示的な設定を追加（`-e mobile show -e datatype none`）
 
@@ -380,15 +378,14 @@ find .maestro/screenshots-archive -type d -maxdepth 3
 | **バケット** | `vrt-sample` (asia-northeast1) |
 | **認証** | `apps/cool-app/vrt-gcs-credentials.json` |
 | **スクリーンショットアーカイブ保存先** | `.maestro/screenshots-archive/` (Git管理外) |
-| **差分閾値** | 0.5% (`thresholdRate: 0.005`) |
+| **差分閾値** | 0.1% (`thresholdRate: 0.001`) |
 | **プラットフォーム** | iOS / Android |
 
-**差分閾値 0.5% の選択理由**:
+**差分閾値 0.1% の選択理由**:
 - アンチエイリアシング、サブピクセルレンダリングによる微小な差異を許容
 - フォントレンダリングの環境差（macOS vs Linux等）を吸収
-- **スクロールバーの位置ずれ、テキストカーソルのブリンクなどを許容**
-- 実際のUI変更は通常1%以上の差分になるため、0.5%でも実変更を確実に検出可能
-- より実用的な運用を実現（過剰な誤検知を防止）
+- 実際のUI変更を確実に検出しつつ、ノイズレベルの差異は無視
+- スクロールバーやカーソルブリンクは、Maestroフロー内で対策済み（タップで消去、フォーカス解除）
 
 #### 設定ファイル詳細
 
@@ -428,7 +425,7 @@ reg-suitの設定ファイル。プロジェクトで共有される設定です
 |------|---|------|
 | `core.workingDir` | `.reg` | reg-suitの作業ディレクトリ（比較結果、レポートが保存される） |
 | `core.actualDir` | `.maestro/screenshots` | 比較対象のスクリーンショット（Maestroが生成） |
-| `core.thresholdRate` | `0.001` | 差分閾値 0.1%（微小な差異を許容） |
+| `core.thresholdRate` | `0.001` | 差分閾値 0.1%（アンチエイリアシング等の微小差異を許容） |
 | [`plugins.reg-simple-keygen-plugin`](https://github.com/reg-viz/reg-suit/tree/master/packages/reg-simple-keygen-plugin) | - | スクリーンショットアーカイブのキー管理（フルパス形式） |
 | [`plugins.reg-publish-gcs-plugin`](https://github.com/reg-viz/reg-suit/tree/master/packages/reg-publish-gcs-plugin) | - | GCSへのアップロード設定 |
 | [`plugins.reg-notify-github-plugin`](https://github.com/reg-viz/reg-suit/tree/master/packages/reg-notify-github-plugin) | - | GitHub連携（PRコメント、ステータスチェック） |
@@ -491,6 +488,50 @@ GitHub Actions Secretsに`VRT_GCS_CREDENTIALS_JSON`を設定することで、�
 - ✅ 任意のスクリーンショットアーカイブ同士を比較可能
 - ✅ CI/CDで自動実行（PR作成時、mainマージ時）
 - ✅ PRコメント自動投稿
+
+### 🎯 VRTのベストプラクティス
+
+**スクリーンショット取得時の注意点:**
+
+VRTで誤検知を防ぐため、以下の対策を実施しています:
+
+1. **スクロールバーの対策:**
+   - スクロール後、`waitForAnimationToEnd` で待機
+   - 画面の安全な場所をタップしてスクロールバーを即座に消す
+   - 再度 `waitForAnimationToEnd` でUI安定化を待機
+
+```yaml
+# スクロール後の推奨パターン
+- scrollUntilVisible:
+    element:
+        text: "要素名"
+    direction: DOWN
+    timeout: 10000
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%,30%"  # スクロールバーを消す
+- waitForAnimationToEnd
+```
+
+2. **テキスト入力後のカーソル対策:**
+   - 入力完了後、入力フィールド以外の要素をタップしてフォーカスを解除
+   - カーソルのブリンク（点滅）を停止させてからスクリーンショット取得
+
+```yaml
+# テキスト入力後の推奨パターン
+- tapOn:
+    id: "input-field"
+- inputText: "テキスト"
+- hideKeyboard
+- tapOn: "ページタイトル"  # フォーカス解除
+- waitForAnimationToEnd
+- takeScreenshot: path/to/screenshot
+```
+
+3. **差分閾値の設定:**
+   - `thresholdRate: 0.001`（0.1%）に設定
+   - アンチエイリアシング、サブピクセルレンダリングなどの微小差異を許容
+   - 実際のUI変更を確実に検出
 
 ### 📋 基本ワークフロー
 
