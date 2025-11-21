@@ -65,7 +65,7 @@ async function findArchiveByHash(hash: string): Promise<string | null> {
     try {
       await $`bunx reg-cli ${actualArchive} ${expectedArchive} ${DIFF_DIR} -R ${REPORT_HTML} -J ${REPORT_JSON} -T ${THRESHOLD}`;
       console.log("✅ No differences detected");
-    } catch (error) {
+    } catch {
       // reg-cli exits with non-zero when differences are found
       console.log("⚠️  Differences detected");
     }
