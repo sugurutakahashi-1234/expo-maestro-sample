@@ -14,9 +14,8 @@ const GCS_CREDENTIALS = "./vrt-gcs-credentials.json";
     }
 
     // Expo configからバージョンを取得（app.jsonが評価される）
-    const expoConfigText = await $`npx expo config --json`.text();
-    const expoConfig = JSON.parse(expoConfigText);
-    const version = expoConfig.expo.version;
+    const expoConfig = await $`npx expo config --json`.json();
+    const version = expoConfig.version;
 
     // Git情報を取得
     const branch = (await $`git rev-parse --abbrev-ref HEAD`.text())
@@ -28,9 +27,9 @@ const GCS_CREDENTIALS = "./vrt-gcs-credentials.json";
     const simpleKey = hash; // 比較用（CI/CDで使用）
     const fullKey = `${branch}/${version}/${hash}`; // 保存用（履歴参照用）
 
-    console.log("# GCSに2つのキーでパブリッシュ:");
-    console.log("# 1. ハッシュのみ（比較用）: " + simpleKey);
-    console.log("# 2. フルパス（保存用）: " + fullKey);
+    console.log("# Publishing to GCS with 2 keys:");
+    console.log("# 1. Hash only (for comparison): " + simpleKey);
+    console.log("# 2. Full path (for history): " + fullKey);
     console.log();
 
     // EXPECTED_KEYを設定しないことで、ベースライン作成モードになる
@@ -41,10 +40,10 @@ const GCS_CREDENTIALS = "./vrt-gcs-credentials.json";
     //
     // 注: .regディレクトリをクリーンアップしないと、残っているexpectedと比較されてしまう
 
-    console.log("# コマンド1: ハッシュのみのキーでパブリッシュ");
+    console.log("# Command 1: Publish with hash-only key");
     console.log(`rm -rf .reg && ACTUAL_KEY=${simpleKey} GOOGLE_APPLICATION_CREDENTIALS=${GCS_CREDENTIALS} bunx reg-suit run`);
     console.log();
-    console.log("# コマンド2: フルパスのキーでパブリッシュ");
+    console.log("# Command 2: Publish with full-path key");
     console.log(`rm -rf .reg && ACTUAL_KEY=${fullKey} GOOGLE_APPLICATION_CREDENTIALS=${GCS_CREDENTIALS} bunx reg-suit run`);
   } catch (error) {
     console.error("❌ Error:", error);

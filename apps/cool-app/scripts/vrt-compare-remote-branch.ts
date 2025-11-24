@@ -101,9 +101,8 @@ function getRemoteScreenshotsDir(
     // ステップ4: バージョンとコミットハッシュを取得
     // ========================================
     // Expo configからバージョンを取得（app.jsonが評価される）
-    const expoConfigText = await $`npx expo config --json`.text();
-    const expoConfig = JSON.parse(expoConfigText);
-    const version = expoConfig.expo.version;
+    const expoConfig = await $`npx expo config --json`.json();
+    const version = expoConfig.version;
 
     // リモートブランチの最新コミットハッシュを取得（7桁）
     let remoteHash: string;
