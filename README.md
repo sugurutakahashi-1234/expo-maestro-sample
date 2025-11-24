@@ -22,9 +22,38 @@ Maestro E2Eテストとreg-suitを使ったVisual Regression Testing (VRT) の�
 
 ### 🔴 Maestro StudioとCLIの同時使用不可
 
-- Maestro Studioが起動していると、**CLIでlaunchAppが機能しない**
+#### Maestro Studioについて
+
+**Maestro Studioは非常に便利なツールです**:
+- ✅ テストシナリオ（Flow YAML）の作成に最適
+- ✅ シナリオの動作確認・デバッグに便利
+- ✅ 視覚的にFlowを確認しながら開発できる
+
+**ただし、重要な制約があります**:
+
+- ⚠️ **Maestro Studioを起動したまま、iOS/AndroidのCLIテストを実行できない**
+- Maestro Studioが起動していると、**CLIで`launchApp`が機能しない**
 - 両者が同じポート7001を使用するため競合する
-- **対策**: Maestro Studioを完全に終了してからCLIテストを実行
+
+**対策**:
+1. Maestro Studioを**完全に終了**する
+2. その後、CLIテストを実行する
+
+```bash
+# ❌ NG: Studioを起動したままCLI実行
+# （Studioが起動している状態で）
+bun run maestro:ios    # → launchAppが失敗
+
+# ✅ OK: Studioを完全に終了してからCLI実行
+# 1. Maestro Studioを終了
+# 2. その後実行
+bun run maestro:ios    # → 正常に動作
+```
+
+**推奨ワークフロー**:
+1. **Maestro Studio**: Flow YAMLの作成・編集・動作確認
+2. **Studio終了**: 完全に終了
+3. **Maestro CLI**: 正式なテスト実行（VRT用スクリーンショット取得など）
 
 **参考**: [GitHub Issue #1927](https://github.com/mobile-dev-inc/maestro/issues/1927)
 
@@ -62,7 +91,8 @@ bun run start
 # ターミナル2: アプリをビルド・起動
 bun run ios
 
-# ターミナル3: Maestro E2Eテスト実行
+# ターミナル3: Maestroセットアップ（初回のみ）& テスト実行
+bun run maestro:setup  # 初回のみ
 bun run maestro:ios
 ```
 
@@ -92,6 +122,7 @@ bun run typecheck   # 全パッケージの型チェック
 
 # apps/cool-app
 cd apps/cool-app
+bun run maestro:setup                    # Maestroディレクトリセットアップ（初回のみ）
 bun run maestro:ios                      # Maestro iOS E2Eテスト
 bun run maestro:android                  # Maestro Android E2Eテスト
 bun run maestro:all                      # iOS → Android 順次実行
@@ -99,6 +130,7 @@ bun run vrt:archive:local                # スクリーンショットアーカ�
 bun run vrt:archive:local:force          # 未コミット変更時も強制作成
 bun run vrt:compare:local:current <hash> # 現在のスクリーンショット vs 過去のスクリーンショットアーカイブ
 bun run vrt:compare:local:archived <h1> <h2> # 過去のスクリーンショットアーカイブ vs 過去のスクリーンショットアーカイブ
+bun run vrt:compare:remote-branch [branch]      # 現在のスクリーンショット vs リモートブランチのスクリーンショット
 bun run vrt:publish:manual               # GCSパブリッシュコマンド生成
 ```
 
@@ -144,6 +176,71 @@ bun run ios
 # ターミナル3: Maestro実行
 cd apps/cool-app
 bun run maestro:ios
+```
+
+---
+
+### 0.5. 初回セットアップ: ディレクトリ構造の準備
+
+⚠️ **Maestro実行前に、スクリーンショット・録画用のディレクトリを作成しておくことを推奨します:**
+
+```bash
+cd apps/cool-app
+bun run maestro:setup
+```
+
+#### なぜ必要？
+
+**理由1: Maestro CLIがディレクトリの自動作成をしない**
+
+- `maestro test`でスクリーンショットや録画を保存しようとすると、**保存先ディレクトリが存在しない場合にエラーで失敗する**
+- Maestroは自動的にディレクトリを作成してくれないため、事前に手動で作成する必要がある
+
+**エラー例**:
+```yaml
+# .maestro/app-flow.yaml
+- takeScreenshot: .maestro/screenshots/ios/home.png
+```
+
+上記を実行すると、`.maestro/screenshots/ios/`ディレクトリが存在しない場合：
+```
+Error: Directory not found: .maestro/screenshots/ios/
+```
+
+**対策**: `bun run maestro:setup`で事前にディレクトリを作成
+
+---
+
+**理由2: Maestro Studioのパス問題**
+
+- Maestro StudioからFlowを実行すると、スクリーンショット・録画が誤ったパスに保存される
+- 正しいパス: `.maestro/screenshots/ios/xxx.png`
+- 誤ったパス: `.maestro/screenshots/.maestro/screenshots/ios/xxx.png`（二重パス）
+- 事前に誤ったパスのディレクトリも作成しておくことで、Studio実行時のエラーを防ぐ
+- 誤ったパスは`.gitignore`で除外済み
+
+---
+
+**運用方針**:
+- **CLI**: 正式なテスト実行環境（スクリーンショットはgit管理）
+- **Studio**: テスト作成・デバッグの補助ツール（スクリーンショットは無視）
+
+**作成されるディレクトリ**:
+```
+.maestro/
+├── screenshots/
+│   ├── android/
+│   ├── ios/
+│   └── .maestro/          # Studioの誤ったパス用（.gitignore済み）
+│       ├── screenshots/
+│       │   ├── android/
+│       │   └── ios/
+│       └── records/
+│           ├── android/
+│           └── ios/
+└── records/
+    ├── android/
+    └── ios/
 ```
 
 ---
@@ -257,7 +354,64 @@ React NativeのaccessibilityLabel属性を使用:
 
 ---
 
-### 5. VRT: ステータスバー固定
+### 5. 録画機能について
+
+Maestroには2つの録画方法がありますが、それぞれ制約があります。
+
+#### 方法1: `maestro record` CLI（非推奨）
+
+**コマンド**:
+```bash
+maestro record --local YourFlow.yaml
+```
+
+**制約**:
+- `--local` でローカル保存がデフォルト
+- ❌ **保存先を指定できない**
+- 保存先: `~/.maestro/tests/2025-11-24_095829/maestro-recording.mp4` のような固定パス
+- ❌ **動画の書き出しが非常に遅い**（2分の録画に10分かかることも）
+- **現実的に運用が難しい**
+
+**参考**: [Maestro: Recording your Flow](https://docs.maestro.dev/cli/recording-your-flow)
+
+---
+
+#### 方法2: Flow内で `startRecording` / `stopRecording`（推奨）⭐
+
+**コマンド**: 通常の `maestro test` で実行
+
+**Flow YAMLの例**:
+```yaml
+appId: com.example.app
+---
+# 録画開始
+- startRecording: .maestro/records/${output.platform}/demo-flow
+
+# テスト実行
+- tapOn: "ボタン"
+- assertVisible: "成功メッセージ"
+
+# 録画停止
+- stopRecording
+```
+
+**メリット**:
+- ✅ **保存先を指定できる**（`.maestro/records/ios/demo-flow.mp4` など）
+- ✅ プラットフォーム別に動的パス生成可能（`${output.platform}`）
+- ✅ 通常のテスト実行と同時に録画
+- ✅ 書き出し速度が実用的
+
+**参考**:
+- [startRecording](https://docs.maestro.dev/api-reference/commands/startrecording)
+- [stopRecording](https://docs.maestro.dev/api-reference/commands/stoprecording)
+
+**推奨運用**:
+- Flow YAML内で `startRecording` / `stopRecording` を使用
+- `.maestro/records/{platform}/` に保存
+
+---
+
+### 6. VRT: ステータスバー固定
 
 **目的**: VRT比較時の誤検知を防ぐ
 
@@ -562,17 +716,71 @@ Maestroは"artificial wait blocks"を設計思想として避けていますが�
 
 ### 📋 基本ワークフロー
 
-**共通手順**:
-```bash
-# 1. Maestroテスト実行（スクリーンショット取得）
-bun run maestro:ios
+#### 3つの比較方法の使い分け
 
-# 2. スクリーンショットアーカイブ作成
-bun run vrt:archive:local
-# → .maestro/screenshots-archive/main/1.0.0/041e30c/ に保存
+| コマンド | 比較対象 | アーカイブ管理 | ネットワーク | クラウドストレージ | おすすめ度 | 用途 |
+|---------|---------|--------------|------------|-----------------|----------|------|
+| **vrt:compare:remote-branch** ⭐ | 現在 vs **Gitリモートブランチ** | **不要** | 必要 | **不要（Git のみ）** | ⭐⭐⭐ | **最もシンプル。mainとの比較に最適** |
+| vrt:compare:local:current | 現在 vs ローカルアーカイブ | 必要 | 不要 | 不要 | ⭐⭐ | オフライン環境での開発 |
+| vrt:compare:local:archived | ローカルアーカイブ vs ローカルアーカイブ | 必要 | 不要 | 不要 | ⭐ | 過去同士の比較（リリース比較等） |
+
+**推奨**: 基本的には **vrt:compare:remote-branch** を使うのが最もシンプルです。
+
+**重要な注意**:
+- `vrt:compare:remote-branch` は **Gitリポジトリのリモートブランチ**から直接スクリーンショットを取得します
+- **GCS/S3などのクラウドストレージは一切使用しません**
+- これにより、追加コスト、セキュリティリスク、インフラ管理の複雑性を完全に回避できます
+
+---
+
+#### パターンA: リモートブランチとの比較（推奨）⭐
+
+**用途**: mainブランチなどリモートブランチと直接比較
+
+**重要**: ここでいう「リモート」は**Gitリポジトリのリモートブランチ**のことです。
+GCS/S3などのクラウドストレージは一切使用しません。
+
+**メリット**:
+- 🎯 **クラウドストレージ不要** - GCS/S3のセットアップ、課金、セキュリティ管理が不要
+- 🎯 **シンプルなインフラ** - Git以外の外部サービスに依存しない
+- 🎯 **コスト0円** - 追加コストなし
+
+**コマンド**:
+```bash
+# 引数なし: リポジトリのデフォルトブランチ（通常はmain）と比較
+bun run vrt:compare:remote-branch
+
+# 引数あり: 指定したブランチと比較
+bun run vrt:compare:remote-branch feature/some-branch
 ```
 
-#### パターンA: 開発中の即座確認
+**特徴**:
+- ✅ **クラウドストレージ不要** - GCS/S3などの外部サービス不要
+- ✅ ローカルアーカイブの管理が不要
+- ✅ `git fetch`で最新のリモートブランチと比較
+- ✅ キャッシュ機能あり（`.reg/remote/`に保存）
+- ✅ チーム全体で同じベースラインを使える
+
+**ワークフロー**:
+```bash
+# 1. featureブランチで開発
+git checkout feature/new-ui
+
+# 2. Maestroテスト実行
+bun run maestro:ios
+
+# 3. mainブランチと比較（これだけ！）
+bun run vrt:compare:remote-branch
+# → 自動的にmainブランチの最新と比較
+```
+
+**注意**:
+- リモートにpushされていないローカルブランチとは比較できない
+- ネットワーク接続が必要（初回のみ、2回目以降はキャッシュ使用）
+
+---
+
+#### パターンB: 開発中の即座確認
 
 **用途**: スクリーンショットアーカイブ作成不要で素早くUI確認
 
@@ -586,7 +794,7 @@ bun run vrt:compare:local:current <expected-hash>
 - feature開発中に、mainブランチのスクリーンショットアーカイブと比較
 - コード変更後、すぐにMaestro実行して差分確認
 
-#### パターンB: 過去スクリーンショットアーカイブ同士の比較
+#### パターンC: 過去スクリーンショットアーカイブ同士の比較
 
 **用途**: 異なるブランチ/バージョン間の比較
 
@@ -601,6 +809,37 @@ bun run vrt:compare:local:archived <actual-hash> <expected-hash>
 - 異なるブランチのスクリーンショットアーカイブ同士の比較
 
 ### 💡 実践例
+
+**最もシンプルなパターン（リモート運用）⭐ 推奨**:
+
+**重要**: この「リモート運用」は**Gitリポジトリのリモートブランチ**を使用する方法です。
+GCS/S3などのクラウドストレージは一切不要です。
+
+```bash
+# 1. featureブランチで開発
+git checkout feature/new-ui
+
+# 2. コードを変更
+
+# 3. Maestroテスト実行
+bun run maestro:ios
+
+# 4. mainブランチと比較（アーカイブ作成不要）
+bun run vrt:compare:remote-branch
+# → Gitリポジトリのリモートmainブランチから直接取得して比較
+
+# 5. コード修正 → 再度Maestro → 比較（繰り返し）
+# ローカルアーカイブ管理が不要で非常にシンプル
+```
+
+**メリット**:
+- ✅ **GCS/S3などのクラウドストレージ不要** - 追加コスト、セキュリティ、複雑性の問題を回避
+- ✅ `vrt:archive:local` 不要
+- ✅ ローカルアーカイブの管理不要
+- ✅ チーム全体で同じベースライン（リモートmain）を使える
+- ✅ キャッシュで2回目以降は高速
+
+---
 
 **基本パターン（過去同士の比較）**:
 ```bash
@@ -728,7 +967,51 @@ GitHub ActionsのPRイベントでは**detached HEAD状態**でチェックア�
 - Maestroをローカルで実行し、その画像をreg-suit/reg-cliで差分検出していくのが現実的
 - **ローカルのマニュアル実行をしながらメンテナンスしていく**のが推奨
 
+**推奨する比較方法**:
+- ⭐ **vrt:compare:remote-branch を使用** - **Gitリポジトリのリモートブランチ**と直接比較（最もシンプル）
+  - **重要**: GCS/S3などのクラウドストレージは一切不要です
+  - 追加コスト、セキュリティ、複雑性の問題を回避できます
+- オフライン環境では vrt:compare:local:* を使用
+
 ### 比較方法の選択肢
+
+#### 方法0: リモート運用（推奨）⭐
+
+**概要**:
+- `vrt:compare:remote-branch`を使用して**Gitリポジトリのリモートブランチ**と直接比較
+- ローカルアーカイブの管理が不要
+- `git fetch`で最新のリモートブランチの状態を取得
+- **GCS/S3などのクラウドストレージは一切使用しません**
+
+**メリット**:
+- ✅ **クラウドストレージ不要** - GCS/S3のセットアップ、課金、セキュリティ管理が不要
+- ✅ **外部サービスへの依存なし** - Git以外の外部サービスに依存しない
+- ✅ ローカルアーカイブの管理不要（最大のメリット）
+- ✅ チーム全体で同じベースライン（リモートmain）を使える
+- ✅ シンプルなワークフロー
+- ✅ キャッシュ機能で2回目以降は高速（`.reg/remote/`に保存）
+
+**デメリット**:
+- ❌ ネットワーク接続が必要（初回のみ）
+- ❌ リモートにpushされていないローカルブランチとは比較できない
+
+**推奨ケース**:
+- 通常の開発フロー（feature → main比較）
+- リモートブランチと比較したい全てのケース
+
+**使用コマンド**:
+```bash
+# Maestroテスト実行
+bun run maestro:ios
+
+# リモートのmainブランチと比較
+bun run vrt:compare:remote-branch
+
+# または特定のブランチと比較
+bun run vrt:compare:remote-branch feature/some-branch
+```
+
+---
 
 #### 方法1: 完全ローカル運用
 

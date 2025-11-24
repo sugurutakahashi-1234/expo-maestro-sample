@@ -139,14 +139,14 @@ jobs:
           # フルパスのキーで比較
           # ベース側（EXPECTED）の変数を構築
           BASE_HASH=$(git rev-parse --short=7 ${{ github.event.pull_request.base.sha }})
-          BASE_VERSION=$(git show ${{ github.event.pull_request.base.sha }}:apps/cool-app/package.json | jq -r '.version')
+          BASE_VERSION=$(git show ${{ github.event.pull_request.base.sha }}:apps/cool-app/app.json | jq -r '.expo.version')
           BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
           BASE_BRANCH_SAFE=$(echo "$BASE_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           EXPECTED_KEY="$BASE_BRANCH_SAFE/$BASE_VERSION/$BASE_HASH"
 
           # PR側（ACTUAL）の変数を構築
           PR_HASH=$(git rev-parse --short=7 HEAD)
-          PR_VERSION=$(jq -r '.version' package.json)
+          PR_VERSION=$(npx expo config --json | jq -r '.expo.version')
           PR_BRANCH="${{ github.head_ref }}"
           PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           ACTUAL_KEY="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH"
@@ -187,7 +187,7 @@ jobs:
         id: pages-path
         run: |
           PR_HASH=$(git rev-parse --short=7 HEAD)
-          PR_VERSION=$(jq -r '.version' apps/cool-app/package.json)
+          PR_VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.expo.version')
           PR_BRANCH="${{ github.head_ref }}"
           PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           PAGES_PATH="vrt-sample/$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH"

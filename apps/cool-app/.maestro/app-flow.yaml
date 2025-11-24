@@ -70,12 +70,16 @@ appId: com.sugurutakahashi.coolapp
 #
 # ==========================================
 
+# maestro.platformを使用したプラットフォーム判定（最初に1回だけ実行）
+- evalScript: ${output.platform = maestro.platform}
+
+# 録画開始
+- startRecording: .maestro/records/${output.platform}/app-flow-recording
+
+# アプリ起動と初期状態クリア
 - launchApp:
     appId: "com.sugurutakahashi.coolapp"
     clearState: true
-
-# maestro.platformを使用したプラットフォーム判定（最初に1回だけ実行）
-- evalScript: ${output.platform = maestro.platform}
 
 # ホーム画面の確認
 - assertVisible: "Expo モノレポ with Bun 🎉"
@@ -216,3 +220,6 @@ appId: com.sugurutakahashi.coolapp
     direction: UP
     timeout: 10000
 - assertVisible: "Expo モノレポ with Bun 🎉"
+
+# 録画停止
+- stopRecording

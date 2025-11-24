@@ -48,7 +48,7 @@ jobs:
           HASH=$(git rev-parse --short=7 HEAD)
           BRANCH="${{ github.ref_name }}"
           BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
-          VERSION=$(jq -r '.version' package.json)
+          VERSION=$(npx expo config --json | jq -r '.expo.version')
           FULL_KEY="$BRANCH_SAFE/$VERSION/$HASH"
           echo "🔍 Publishing to GCS"
           echo "KEY: $FULL_KEY"
@@ -58,7 +58,7 @@ jobs:
         if: always()
         run: |
           HASH=$(git rev-parse --short=7 HEAD)
-          VERSION=$(jq -r '.version' apps/cool-app/package.json)
+          VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.expo.version')
           BRANCH="${{ github.ref_name }}"
           echo "## VRT Baseline Update" >> $GITHUB_STEP_SUMMARY
           echo "- Branch: $BRANCH" >> $GITHUB_STEP_SUMMARY
