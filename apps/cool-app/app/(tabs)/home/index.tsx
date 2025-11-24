@@ -19,7 +19,7 @@ export default function HomeScreen() {
         <Text style={styles.subtitle}>{formatMessage(getGreetingTime())}</Text>
         <Greeting name="開発者" />
         <Text style={styles.info}>
-          モノレポアーキテクチャで構築された快適な開発環境です 🚀
+          モノレポアーキテクチャで構築された開発環境です 🚀
         </Text>
       </View>
 

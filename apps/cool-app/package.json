@@ -21,6 +21,7 @@
     "vrt:publish:manual": "bun run scripts/vrt-publish-manual.ts",
     "vrt:compare:local:current": "bun run scripts/vrt-compare-local-current.ts",
     "vrt:compare:local:archived": "bun run scripts/vrt-compare-local-archived.ts",
+    "vrt:compare:remote": "bun run scripts/vrt-compare-remote-branch.ts",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "format": "echo 'No formatter configured for cool-app'",

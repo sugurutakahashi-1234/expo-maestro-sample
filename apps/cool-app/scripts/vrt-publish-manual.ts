@@ -13,9 +13,10 @@ const GCS_CREDENTIALS = "./vrt-gcs-credentials.json";
       process.exit(1);
     }
 
-    // package.jsonからバージョンを取得
-    const pkg = await Bun.file("./package.json").json();
-    const version = pkg.version;
+    // Expo configからバージョンを取得（app.jsonが評価される）
+    const expoConfigText = await $`npx expo config --json`.text();
+    const expoConfig = JSON.parse(expoConfigText);
+    const version = expoConfig.expo.version;
 
     // Git情報を取得
     const branch = (await $`git rev-parse --abbrev-ref HEAD`.text())
