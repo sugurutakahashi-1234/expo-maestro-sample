@@ -26,8 +26,7 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        working-directory: apps/cool-app
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
@@ -81,8 +80,7 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        working-directory: apps/cool-app
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Install Playwright browsers
         working-directory: apps/cool-app

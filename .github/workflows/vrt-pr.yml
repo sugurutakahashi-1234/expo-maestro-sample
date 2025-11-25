@@ -80,8 +80,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.check.outputs.should_run == 'true'
-        working-directory: apps/cool-app
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Authenticate to Google Cloud
         if: steps.check.outputs.should_run == 'true'
@@ -299,13 +298,14 @@ jobs:
 
       - name: Install dependencies
         if: steps.check.outputs.should_run == 'true'
-        working-directory: apps/cool-app
-        run: bun install
+        run: bun install --frozen-lockfile
 
+      # --with-deps: WebKitはubuntu-latestに含まれていないシステムライブラリ
+      # （libgtk-4, libgraphene等）を必要とするため、依存関係も一緒にインストール
       - name: Install Playwright browsers
         if: steps.check.outputs.should_run == 'true'
         working-directory: apps/cool-app
-        run: bunx playwright install chromium webkit
+        run: bunx playwright install --with-deps chromium webkit
 
       - name: Run Playwright tests
         if: steps.check.outputs.should_run == 'true'
