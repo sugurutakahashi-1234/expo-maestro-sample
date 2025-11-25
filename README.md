@@ -8,10 +8,21 @@ Maestro E2EテストとVisual Regression Testing (VRT) の検証用リポジト�
 
 ### 必須ツール
 
+[mise](https://mise.jdx.dev/)でツールを管理しています。
+
 ```bash
-brew install maestro          # Maestro CLI
-brew install oven-sh/bun/bun  # Bun
+# miseがインストールされていない場合
+brew install mise
+
+# ツールをインストール（mise.tomlに基づく）
+mise install
 ```
+
+**mise.tomlで管理されるツール**:
+- Node.js
+- Bun
+- Maestro CLI
+- Java (temurin-21) ※Maestro実行に必要
 
 ### プロジェクト構成
 
