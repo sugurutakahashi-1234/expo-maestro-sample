@@ -248,23 +248,18 @@ jobs:
   # ========================================
   # Playwright VRT
   # ========================================
+  # 注: Playwright公式Dockerイメージ（mcr.microsoft.com/playwright:v1.56.1-noble）を
+  # 使用してブラウザインストール時間の短縮を試みたが、コンテナ内でunzipが不在のため
+  # apt-get installが必要となり、結果的に従来のアプローチと同等の時間がかかった。
+  # 参考: https://stackoverflow.com/questions/76095224
   playwright-vrt:
     runs-on: ubuntu-latest
-    # Playwright公式Dockerイメージ（ブラウザプリインストール済み）
-    # - Chromium/WebKitのダウンロードが不要になり、約1分→30秒に短縮
-    # - バージョンはpackage.jsonの@playwright/testと一致させること
-    container:
-      image: mcr.microsoft.com/playwright:v1.56.1-noble
 
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-
-      # コンテナ内でgitを使用するために必要（所有者の違いによるsafe.directoryエラー回避）
-      - name: Configure git safe directory
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Check VRT conditions
         id: check
@@ -298,11 +293,6 @@ jobs:
             💡 **Playwright VRTを実行するにはコード変更が必要です:**
             - コード変更（`.ts`, `.tsx`, `.js`, `.jsx`, `.json`, `.yaml`）
 
-      # Playwrightコンテナにはunzipがないため、oven-sh/setup-bunに必要
-      - name: Install unzip
-        if: steps.check.outputs.should_run == 'true'
-        run: apt-get update && apt-get install -y unzip
-
       - name: Setup Bun
         if: steps.check.outputs.should_run == 'true'
         uses: oven-sh/setup-bun@v2
@@ -311,6 +301,11 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         working-directory: apps/cool-app
         run: bun install
+
+      - name: Install Playwright browsers
+        if: steps.check.outputs.should_run == 'true'
+        working-directory: apps/cool-app
+        run: bunx playwright install chromium webkit
 
       - name: Run Playwright tests
         if: steps.check.outputs.should_run == 'true'
