@@ -10,7 +10,10 @@ permissions:
   statuses: write  # reg-notify-github-plugin がコミットステータスを設定
 
 jobs:
-  update-baseline:
+  # ========================================
+  # Maestro ベースライン
+  # ========================================
+  maestro-baseline:
     runs-on: ubuntu-latest
 
     steps:
@@ -34,25 +37,19 @@ jobs:
       - name: Publish to GCS
         working-directory: apps/cool-app
         run: |
-          # Note: ハッシュのみのキー（コマンド1）は不要（コメントアウト済み）
-          # 理由: vrt-pr.yml の比較ではフルパスのキーだけを使用している。
-          # ハッシュのみのキーは使われていないため、アップロード不要。
-          #
-          # # コマンド1: ハッシュのみのキー（比較用）
-          # HASH=$(git rev-parse --short=7 HEAD)
-          # echo "🔍 Debug Info (Command 1)"
-          # echo "HASH: $HASH"
-          # rm -rf .reg && ACTUAL_KEY=$HASH bunx reg-suit run
-
-          # フルパスのキー（履歴保存用）
+          # キー形式: {branch}/{version}/{hash}/maestro
           HASH=$(git rev-parse --short=7 HEAD)
           BRANCH="${{ github.ref_name }}"
           BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           VERSION=$(npx expo config --json | jq -r '.expo.version')
-          FULL_KEY="$BRANCH_SAFE/$VERSION/$HASH"
-          echo "🔍 Publishing to GCS"
+          FULL_KEY="$BRANCH_SAFE/$VERSION/$HASH/maestro"
+          echo "🔍 Publishing Maestro baseline to GCS"
           echo "KEY: $FULL_KEY"
-          rm -rf .reg && EXPECTED_KEY=$FULL_KEY ACTUAL_KEY=$FULL_KEY bunx reg-suit run
+          rm -rf .reg
+          ACTUAL_DIR=.maestro/screenshots \
+          EXPECTED_KEY=$FULL_KEY \
+          ACTUAL_KEY=$FULL_KEY \
+          bunx reg-suit run
 
       - name: Summary
         if: always()
@@ -60,9 +57,75 @@ jobs:
           HASH=$(git rev-parse --short=7 HEAD)
           VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.expo.version')
           BRANCH="${{ github.ref_name }}"
-          echo "## VRT Baseline Update" >> $GITHUB_STEP_SUMMARY
+          echo "## Maestro VRT Baseline Update" >> $GITHUB_STEP_SUMMARY
           echo "- Branch: $BRANCH" >> $GITHUB_STEP_SUMMARY
           echo "- Version: $VERSION" >> $GITHUB_STEP_SUMMARY
           echo "- Commit: $HASH" >> $GITHUB_STEP_SUMMARY
+          echo "- Key: $BRANCH/$VERSION/$HASH/maestro" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ ベースラインが GCS に保存されました。" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Maestro ベースラインが GCS に保存されました。" >> $GITHUB_STEP_SUMMARY
+
+  # ========================================
+  # Playwright ベースライン
+  # ========================================
+  playwright-baseline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        working-directory: apps/cool-app
+        run: bun install
+
+      - name: Install Playwright browsers
+        working-directory: apps/cool-app
+        run: bunx playwright install chromium --with-deps
+
+      - name: Run Playwright tests
+        working-directory: apps/cool-app
+        run: bun run playwright:web
+        env:
+          CI: true
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: '${{ secrets.VRT_GCS_CREDENTIALS_JSON }}'
+
+      - name: Publish to GCS
+        working-directory: apps/cool-app
+        run: |
+          # キー形式: {branch}/{version}/{hash}/playwright
+          HASH=$(git rev-parse --short=7 HEAD)
+          BRANCH="${{ github.ref_name }}"
+          BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          VERSION=$(npx expo config --json | jq -r '.expo.version')
+          FULL_KEY="$BRANCH_SAFE/$VERSION/$HASH/playwright"
+          echo "🔍 Publishing Playwright baseline to GCS"
+          echo "KEY: $FULL_KEY"
+          rm -rf .reg
+          ACTUAL_DIR=e2e/screenshots \
+          EXPECTED_KEY=$FULL_KEY \
+          ACTUAL_KEY=$FULL_KEY \
+          bunx reg-suit run
+
+      - name: Summary
+        if: always()
+        run: |
+          HASH=$(git rev-parse --short=7 HEAD)
+          VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.expo.version')
+          BRANCH="${{ github.ref_name }}"
+          echo "## Playwright VRT Baseline Update" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: $BRANCH" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: $HASH" >> $GITHUB_STEP_SUMMARY
+          echo "- Key: $BRANCH/$VERSION/$HASH/playwright" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Playwright ベースラインが GCS に保存されました。" >> $GITHUB_STEP_SUMMARY

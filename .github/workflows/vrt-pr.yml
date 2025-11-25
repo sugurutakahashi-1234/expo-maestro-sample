@@ -1,12 +1,6 @@
 name: VRT PR Comparison
 
 # PRが作成・更新されたときにVRT比較を実行
-#
-# Note: 代替実装案
-# ジョブを2つに分割する方法もある（check-conditions + vrt-compare）
-# メリット: 各ステップに条件を追加する必要がない、ジョブ全体がスキップされる
-# デメリット: チェックアウトが2回実行される
-# 現在の実装はシンプルさを優先して1ジョブで条件分岐している
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -19,7 +13,10 @@ permissions:
   id-token: write       # OIDC トークン検証用
 
 jobs:
-  vrt-compare:
+  # ========================================
+  # Maestro VRT
+  # ========================================
+  maestro-vrt:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,7 +28,7 @@ jobs:
       - name: Check VRT conditions
         id: check
         run: |
-          echo "🔍 Checking VRT execution conditions..."
+          echo "🔍 Checking Maestro VRT execution conditions..."
 
           # コード系ファイルの変更チェック（.ts, .tsx, .js, .jsx, .json, .yaml）
           CODE_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD | grep -E '\.(ts|tsx|js|jsx|json|yaml)$' || echo "")
@@ -43,10 +40,10 @@ jobs:
           if [ -z "$CODE_CHANGED" ] && [ -z "$SCREENSHOTS_CHANGED" ]; then
             echo "should_run=false" >> $GITHUB_OUTPUT
             echo "skip_reason=コード変更もスクリーンショット変更も検出されませんでした" >> $GITHUB_OUTPUT
-            echo "⏭️ VRT Skipped: No code or screenshot changes detected"
+            echo "⏭️ Maestro VRT Skipped: No code or screenshot changes detected"
           else
             echo "should_run=true" >> $GITHUB_OUTPUT
-            echo "✅ VRT conditions met - proceeding with comparison"
+            echo "✅ Maestro VRT conditions met - proceeding with comparison"
             if [ -n "$CODE_CHANGED" ]; then
               echo "  - Code changes detected"
             fi
@@ -55,19 +52,19 @@ jobs:
             fi
           fi
 
-      - name: Comment PR - VRT Skipped
+      - name: Comment PR - Maestro VRT Skipped
         if: steps.check.outputs.should_run == 'false'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          header: vrt-skipped
+          header: maestro-vrt-skipped
           message: |
-            ## ⏭️ VRT Skipped
+            ## ⏭️ Maestro VRT Skipped
 
             **理由**: ${{ steps.check.outputs.skip_reason }}
 
             ---
 
-            💡 **VRTを実行するには以下のいずれかの変更が必要です:**
+            💡 **Maestro VRTを実行するには以下のいずれかの変更が必要です:**
             - コード変更（`.ts`, `.tsx`, `.js`, `.jsx`, `.json`, `.yaml`）
             - スクリーンショット変更（`apps/cool-app/.maestro/screenshots/`）
 
@@ -86,46 +83,12 @@ jobs:
         working-directory: apps/cool-app
         run: bun install
 
-      # Maestroは事前に実行済み（.maestro/screenshots が存在する前提）
-
       - name: Authenticate to Google Cloud
         if: steps.check.outputs.should_run == 'true'
         uses: google-github-actions/auth@v3
         with:
           credentials_json: '${{ secrets.VRT_GCS_CREDENTIALS_JSON }}'
 
-      # Note: このステップは不要（コメントアウト済み）
-      # 理由: "Compare with baseline" ステップで `reg-suit run` を実行すると、
-      # 自動的に compare + publish + notify が実行されるため、事前アップロードは不要。
-      # このステップを実行すると以下の問題が発生する：
-      # 1. 同じスクリーンショットアーカイブが2回アップロードされる（無駄）
-      # 2. 2つの GitHub ステータスチェックが作成される（重複表示）
-      # 3. 処理時間が増加する
-      #
-      # - name: Publish PR screenshot archive to GCS (2 keys)
-      #   working-directory: apps/cool-app
-      #   run: |
-      #     # ハッシュのみのキー（比較用）
-      #     PR_HASH=$(git rev-parse --short=7 HEAD)
-      #     echo "🔍 Debug Info (Command 1)"
-      #     echo "PR_HASH: $PR_HASH"
-      #     rm -rf .reg && ACTUAL_KEY=$PR_HASH bunx reg-suit run
-      #
-      #     # フルパスのキー（履歴保存用）
-      #     BRANCH="${{ github.head_ref }}"
-      #     BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
-      #     VERSION=$(jq -r '.version' package.json)
-      #     FULL_KEY="$BRANCH_SAFE/$VERSION/$PR_HASH"
-      #     echo "🔍 Debug Info (Command 2)"
-      #     echo "BRANCH: $BRANCH"
-      #     echo "BRANCH_SAFE: $BRANCH_SAFE"
-      #     echo "VERSION: $VERSION"
-      #     echo "FULL_KEY: $FULL_KEY"
-      #     rm -rf .reg && ACTUAL_KEY=$FULL_KEY bunx reg-suit run
-
-      # GitHub ActionsのPRイベントではdetached HEAD状態でチェックアウトされるため、
-      # reg-notify-github-pluginがブランチ名を検出できず、PRコメントを投稿できない。
-      # このステップでブランチにチェックアウトすることで、プラグインが正常に動作する。
       - name: Workaround for detached HEAD
         if: steps.check.outputs.should_run == 'true'
         run: |
@@ -136,22 +99,21 @@ jobs:
         id: comparison-keys
         working-directory: apps/cool-app
         run: |
-          # フルパスのキーで比較
           # ベース側（EXPECTED）の変数を構築
           BASE_HASH=$(git rev-parse --short=7 ${{ github.event.pull_request.base.sha }})
           BASE_VERSION=$(git show ${{ github.event.pull_request.base.sha }}:apps/cool-app/app.json | jq -r '.expo.version')
           BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
           BASE_BRANCH_SAFE=$(echo "$BASE_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
-          EXPECTED_KEY="$BASE_BRANCH_SAFE/$BASE_VERSION/$BASE_HASH"
+          EXPECTED_KEY="$BASE_BRANCH_SAFE/$BASE_VERSION/$BASE_HASH/maestro"
 
           # PR側（ACTUAL）の変数を構築
           PR_HASH=$(git rev-parse --short=7 HEAD)
           PR_VERSION=$(npx expo config --json | jq -r '.expo.version')
           PR_BRANCH="${{ github.head_ref }}"
           PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
-          ACTUAL_KEY="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH"
+          ACTUAL_KEY="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH/maestro"
 
-          echo "🔍 VRT Comparison Keys"
+          echo "🔍 Maestro VRT Comparison Keys"
           echo "EXPECTED_KEY: $EXPECTED_KEY"
           echo "ACTUAL_KEY: $ACTUAL_KEY"
           echo ""
@@ -168,11 +130,12 @@ jobs:
           echo "expected-key=$EXPECTED_KEY" >> $GITHUB_OUTPUT
           echo "actual-key=$ACTUAL_KEY" >> $GITHUB_OUTPUT
 
-          # フルパスのキーを使用して比較
-          rm -rf .reg && EXPECTED_KEY=$EXPECTED_KEY ACTUAL_KEY=$ACTUAL_KEY bunx reg-suit run
-
-          # シンプルバージョン（ハッシュのみで比較する場合は以下を使用）
-          # rm -rf .reg && EXPECTED_KEY=$BASE_HASH ACTUAL_KEY=$PR_HASH bunx reg-suit run
+          # reg-suit で比較
+          rm -rf .reg
+          ACTUAL_DIR=.maestro/screenshots \
+          EXPECTED_KEY=$EXPECTED_KEY \
+          ACTUAL_KEY=$ACTUAL_KEY \
+          bunx reg-suit run
 
           # 比較結果の詳細を出力
           echo ""
@@ -190,7 +153,7 @@ jobs:
           PR_VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.expo.version')
           PR_BRANCH="${{ github.head_ref }}"
           PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
-          PAGES_PATH="vrt-sample/$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH"
+          PAGES_PATH="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH/maestro"
           echo "path=$PAGES_PATH" >> $GITHUB_OUTPUT
           echo "📍 GitHub Pages path: $PAGES_PATH"
 
@@ -207,18 +170,18 @@ jobs:
         if: steps.check.outputs.should_run == 'true' && always()
         uses: actions/upload-artifact@v5
         with:
-          name: vrt-report
+          name: maestro-vrt-report
           path: apps/cool-app/.reg/
           retention-days: 30
-          include-hidden-files: true  # .reg/ は隠しディレクトリのため必須
+          include-hidden-files: true
 
       - name: Comment PR with VRT access methods
         if: steps.check.outputs.should_run == 'true' && always()
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          header: vrt-report
+          header: maestro-vrt-report
           message: |
-            ## 📊 VRT Report
+            ## 📊 Maestro VRT Report
 
             ### 🌐 オンライン表示（GitHub Pages）
 
@@ -254,8 +217,194 @@ jobs:
         run: |
           BASE_HASH=$(git rev-parse --short=7 ${{ github.event.pull_request.base.sha }})
           PR_HASH=$(git rev-parse --short=7 HEAD)
-          echo "## VRT Comparison" >> $GITHUB_STEP_SUMMARY
+          echo "## Maestro VRT Comparison" >> $GITHUB_STEP_SUMMARY
           echo "- Base: $BASE_HASH" >> $GITHUB_STEP_SUMMARY
           echo "- PR: $PR_HASH" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ VRT比較が完了しました。詳細はアーティファクトのレポートを確認してください。" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Maestro VRT比較が完了しました。詳細はアーティファクトのレポートを確認してください。" >> $GITHUB_STEP_SUMMARY
+
+  # ========================================
+  # Playwright VRT
+  # ========================================
+  playwright-vrt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Check VRT conditions
+        id: check
+        run: |
+          echo "🔍 Checking Playwright VRT execution conditions..."
+
+          # コード系ファイルの変更チェック
+          CODE_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD | grep -E '\.(ts|tsx|js|jsx|json|yaml)$' || echo "")
+
+          if [ -z "$CODE_CHANGED" ]; then
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "skip_reason=コード変更が検出されませんでした" >> $GITHUB_OUTPUT
+            echo "⏭️ Playwright VRT Skipped: No code changes detected"
+          else
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "✅ Playwright VRT conditions met - proceeding with comparison"
+          fi
+
+      - name: Comment PR - Playwright VRT Skipped
+        if: steps.check.outputs.should_run == 'false'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: playwright-vrt-skipped
+          message: |
+            ## ⏭️ Playwright VRT Skipped
+
+            **理由**: ${{ steps.check.outputs.skip_reason }}
+
+            ---
+
+            💡 **Playwright VRTを実行するにはコード変更が必要です:**
+            - コード変更（`.ts`, `.tsx`, `.js`, `.jsx`, `.json`, `.yaml`）
+
+      - name: Setup Bun
+        if: steps.check.outputs.should_run == 'true'
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        if: steps.check.outputs.should_run == 'true'
+        working-directory: apps/cool-app
+        run: bun install
+
+      - name: Install Playwright browsers
+        if: steps.check.outputs.should_run == 'true'
+        working-directory: apps/cool-app
+        run: bunx playwright install chromium --with-deps
+
+      - name: Run Playwright tests
+        if: steps.check.outputs.should_run == 'true'
+        working-directory: apps/cool-app
+        run: bun run playwright:web
+        env:
+          CI: true
+
+      - name: Authenticate to Google Cloud
+        if: steps.check.outputs.should_run == 'true'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: '${{ secrets.VRT_GCS_CREDENTIALS_JSON }}'
+
+      - name: Workaround for detached HEAD
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          git checkout ${{ github.head_ref }}
+
+      - name: Compare with baseline
+        if: steps.check.outputs.should_run == 'true'
+        id: comparison-keys
+        working-directory: apps/cool-app
+        run: |
+          # ベース側（EXPECTED）
+          BASE_HASH=$(git rev-parse --short=7 ${{ github.event.pull_request.base.sha }})
+          BASE_VERSION=$(git show ${{ github.event.pull_request.base.sha }}:apps/cool-app/app.json | jq -r '.expo.version')
+          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          BASE_BRANCH_SAFE=$(echo "$BASE_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          EXPECTED_KEY="$BASE_BRANCH_SAFE/$BASE_VERSION/$BASE_HASH/playwright"
+
+          # PR側（ACTUAL）
+          PR_HASH=$(git rev-parse --short=7 HEAD)
+          PR_VERSION=$(npx expo config --json | jq -r '.expo.version')
+          PR_BRANCH="${{ github.head_ref }}"
+          PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          ACTUAL_KEY="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH/playwright"
+
+          echo "🔍 Playwright VRT Comparison Keys"
+          echo "EXPECTED_KEY: $EXPECTED_KEY"
+          echo "ACTUAL_KEY: $ACTUAL_KEY"
+          echo ""
+
+          # Output for PR comment
+          echo "base-hash=$BASE_HASH" >> $GITHUB_OUTPUT
+          echo "pr-hash=$PR_HASH" >> $GITHUB_OUTPUT
+          echo "expected-key=$EXPECTED_KEY" >> $GITHUB_OUTPUT
+          echo "actual-key=$ACTUAL_KEY" >> $GITHUB_OUTPUT
+
+          # reg-suit で比較
+          rm -rf .reg
+          ACTUAL_DIR=e2e/screenshots \
+          EXPECTED_KEY=$EXPECTED_KEY \
+          ACTUAL_KEY=$ACTUAL_KEY \
+          bunx reg-suit run
+
+          # 比較結果の詳細を出力
+          echo ""
+          echo "📁 .reg directory structure:"
+          ls -lah .reg/
+          echo ""
+          echo "📄 VRT comparison result (out.json):"
+          jq '.' .reg/out.json
+
+      - name: Set GitHub Pages path
+        if: steps.check.outputs.should_run == 'true'
+        id: pages-path
+        run: |
+          PR_HASH=$(git rev-parse --short=7 HEAD)
+          PR_VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.expo.version')
+          PR_BRANCH="${{ github.head_ref }}"
+          PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          PAGES_PATH="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH/playwright"
+          echo "path=$PAGES_PATH" >> $GITHUB_OUTPUT
+          echo "📍 GitHub Pages path: $PAGES_PATH"
+
+      - name: Deploy to GitHub Pages
+        if: steps.check.outputs.should_run == 'true' && always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: apps/cool-app/.reg
+          destination_dir: ${{ steps.pages-path.outputs.path }}
+          keep_files: true
+
+      - name: Upload VRT report
+        if: steps.check.outputs.should_run == 'true' && always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-vrt-report
+          path: apps/cool-app/.reg/
+          retention-days: 30
+          include-hidden-files: true
+
+      - name: Comment PR with VRT access methods
+        if: steps.check.outputs.should_run == 'true' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: playwright-vrt-report
+          message: |
+            ## 📊 Playwright VRT Report
+
+            ### 🌐 オンライン表示（GitHub Pages）
+
+            🔗 **View Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/
+
+            ⏱️ このレポートは **30日間保存** されます（その後自動削除）。
+
+            ---
+
+            ### 📊 比較情報
+
+            - **Base**: `${{ steps.comparison-keys.outputs.expected-key }}`
+            - **PR**: `${{ steps.comparison-keys.outputs.actual-key }}`
+
+            ---
+            *Powered by reg-suit + Playwright + GitHub Pages*
+
+      - name: Summary
+        if: steps.check.outputs.should_run == 'true' && always()
+        run: |
+          BASE_HASH=$(git rev-parse --short=7 ${{ github.event.pull_request.base.sha }})
+          PR_HASH=$(git rev-parse --short=7 HEAD)
+          echo "## Playwright VRT Comparison" >> $GITHUB_STEP_SUMMARY
+          echo "- Base: $BASE_HASH" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: $PR_HASH" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Playwright VRT比較が完了しました。詳細はアーティファクトのレポートを確認してください。" >> $GITHUB_STEP_SUMMARY

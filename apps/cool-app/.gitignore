@@ -56,6 +56,10 @@ app-example
 .reg/                     # reg-suit作業ディレクトリ
 .maestro/screenshots-archive/       # VRTスクリーンショットアーカイブ履歴（GCS管理）
 
+# Playwright
+e2e/test-results/                   # テスト結果（毎回生成）
+playwright-report/                  # Playwrightデフォルトのレポートディレクトリ
+
 # GCP認証情報（絶対にコミットしない！）
 *-service-account-key.json
 service-account*.json
