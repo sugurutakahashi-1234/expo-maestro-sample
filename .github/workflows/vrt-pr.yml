@@ -74,6 +74,14 @@ jobs:
             bun run maestro:all # Maestroテスト実行（スクリーンショット取得）
             ```
 
+      # VRT実行時は以前のskippedコメントを削除
+      - name: Delete Maestro VRT Skipped comment
+        if: steps.check.outputs.should_run == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: maestro-vrt-skipped
+          delete: true
+
       - name: Setup Bun
         if: steps.check.outputs.should_run == 'true'
         uses: oven-sh/setup-bun@v2
@@ -291,6 +299,14 @@ jobs:
 
             💡 **Playwright VRTを実行するにはコード変更が必要です:**
             - コード変更（`.ts`, `.tsx`, `.js`, `.jsx`, `.json`, `.yaml`）
+
+      # VRT実行時は以前のskippedコメントを削除
+      - name: Delete Playwright VRT Skipped comment
+        if: steps.check.outputs.should_run == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: playwright-vrt-skipped
+          delete: true
 
       - name: Setup Bun
         if: steps.check.outputs.should_run == 'true'
