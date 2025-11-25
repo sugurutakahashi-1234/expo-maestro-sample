@@ -298,6 +298,11 @@ jobs:
             💡 **Playwright VRTを実行するにはコード変更が必要です:**
             - コード変更（`.ts`, `.tsx`, `.js`, `.jsx`, `.json`, `.yaml`）
 
+      # Playwrightコンテナにはunzipがないため、oven-sh/setup-bunに必要
+      - name: Install unzip
+        if: steps.check.outputs.should_run == 'true'
+        run: apt-get update && apt-get install -y unzip
+
       - name: Setup Bun
         if: steps.check.outputs.should_run == 'true'
         uses: oven-sh/setup-bun@v2
