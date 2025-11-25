@@ -50,21 +50,45 @@ export default defineConfig({
   },
 
   // ========================================
-  // テストプロジェクト（ブラウザ設定）
+  // テストプロジェクト（ブラウザ・デバイス設定）
   // ========================================
-  // 複数ブラウザでテストする場合は配列に追加
-  // 例: Firefox, Safari, モバイルブラウザなど
+  // 参考: https://playwright.dev/docs/emulation#devices
+  // デバイス定義: https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/server/deviceDescriptorsSource.json
   projects: [
+    // ========================================
+    // デスクトップブラウザ
+    // ========================================
+    // Chromium（Chrome/Edge系）- 世界シェア約65%
+    // プリセット設定: viewport 1280×720, isMobile: false, hasTouch: false
     {
-      name: "web",
-      use: {
-        // Chromeブラウザのプリセット設定を適用
-        ...devices["Desktop Chrome"],
+      name: "chromium-desktop",
+      use: { ...devices["Desktop Chrome"] },
+    },
+    // WebKit（Safari）- macOS/iOS標準ブラウザ
+    // プリセット設定: viewport 1280×720, isMobile: false, hasTouch: false
+    {
+      name: "webkit-desktop",
+      use: { ...devices["Desktop Safari"] },
+    },
 
-        // VRT（Visual Regression Testing）用に固定サイズ
-        // サイズが変わると画像比較で差分が出るため固定
-        viewport: { width: 1280, height: 720 },
-      },
+    // ========================================
+    // モバイルデバイス
+    // ========================================
+    // iPhone 15 - Playwrightで利用可能な最新iPhone（2025年時点）
+    // プリセット設定: viewport 393×659, deviceScaleFactor: 3, iOS 17.5
+    // isMobile: true（メタビューポートタグ適用）, hasTouch: true
+    // defaultBrowserType: "webkit"（Safari Mobile エンジン）
+    {
+      name: "iphone",
+      use: { ...devices["iPhone 15"] },
+    },
+    // Pixel 7 - Playwrightで利用可能な最新Pixel（2025年時点）
+    // プリセット設定: viewport 412×839, deviceScaleFactor: 2.625, Android 14
+    // isMobile: true, hasTouch: true
+    // defaultBrowserType: "chromium"（Chrome Mobile エンジン）
+    {
+      name: "pixel",
+      use: { ...devices["Pixel 7"] },
     },
   ],
 

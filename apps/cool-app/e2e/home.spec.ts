@@ -1,7 +1,9 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("ホーム画面", () => {
-  test("タイトルが表示され、スクリーンショットを取得", async ({ page }) => {
+  test("タイトルが表示され、スクリーンショットを取得", async ({
+    page,
+  }, testInfo) => {
     await page.goto("/");
 
     // ページの読み込みを待つ
@@ -13,9 +15,10 @@ test.describe("ホーム画面", () => {
     // 記事リストセクションの確認
     await expect(page.getByText("記事リスト")).toBeVisible();
 
-    // VRT用スクリーンショット
+    // VRT用スクリーンショット（プロジェクト名でディレクトリ分割）
+    // 例: e2e/screenshots/chromium-desktop/home-tab.png
     await page.screenshot({
-      path: "e2e/screenshots/web/home-tab.png",
+      path: `e2e/screenshots/${testInfo.project.name}/home-tab.png`,
     });
   });
 });
