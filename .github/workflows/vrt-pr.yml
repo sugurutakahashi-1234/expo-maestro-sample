@@ -312,12 +312,27 @@ jobs:
         env:
           CI: true
 
+      - name: Set GitHub Pages path
+        if: steps.check.outputs.should_run == 'true'
+        id: pages-path
+        run: |
+          PR_HASH=$(git rev-parse --short=7 HEAD)
+          PR_VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.version')
+          PR_BRANCH="${{ github.head_ref }}"
+          PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          PAGES_PATH="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH/playwright"
+          echo "path=$PAGES_PATH" >> $GITHUB_OUTPUT
+          echo "📍 GitHub Pages path: $PAGES_PATH"
+
       - name: Playwright Report Summary
         if: always() && steps.check.outputs.should_run == 'true'
         uses: daun/playwright-report-summary@v3
         with:
           report-file: apps/cool-app/playwright-report.json
           comment-title: '🎭 Playwright Test Results'
+          report-url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/html-report/
+          job-summary: true
+          icon-style: emojis
 
       - name: Authenticate to Google Cloud
         if: steps.check.outputs.should_run == 'true'
@@ -398,18 +413,6 @@ jobs:
           echo "$VRT_TABLE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Set GitHub Pages path
-        if: steps.check.outputs.should_run == 'true'
-        id: pages-path
-        run: |
-          PR_HASH=$(git rev-parse --short=7 HEAD)
-          PR_VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.version')
-          PR_BRANCH="${{ github.head_ref }}"
-          PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
-          PAGES_PATH="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH/playwright"
-          echo "path=$PAGES_PATH" >> $GITHUB_OUTPUT
-          echo "📍 GitHub Pages path: $PAGES_PATH"
-
       - name: Deploy VRT Report to GitHub Pages
         if: steps.check.outputs.should_run == 'true' && always()
         uses: peaceiris/actions-gh-pages@v4
@@ -455,9 +458,7 @@ jobs:
 
             ${{ steps.comparison-keys.outputs.vrt-table }}
 
-            🔗 **View VRT Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/
-
-            📊 **View HTML Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/html-report/
+            🔗 **View Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/
 
             <details>
             <summary>📋 詳細情報</summary>
