@@ -250,6 +250,10 @@ jobs:
   # ========================================
   playwright-vrt:
     runs-on: ubuntu-latest
+    # Playwright公式Dockerイメージ（ブラウザプリインストール済み）
+    # バージョンはpackage.jsonの@playwright/testと一致させること
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
 
     steps:
       - name: Checkout PR branch
@@ -297,13 +301,6 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         working-directory: apps/cool-app
         run: bun install
-
-      - name: Install Playwright browsers
-        if: steps.check.outputs.should_run == 'true'
-        working-directory: apps/cool-app
-        # Chromium: Chrome/Edge系、WebKit: Safari系
-        # 4プロジェクト（chromium-desktop, webkit-desktop, iphone, pixel）で使用
-        run: bunx playwright install chromium webkit --with-deps
 
       - name: Run Playwright tests
         if: steps.check.outputs.should_run == 'true'
