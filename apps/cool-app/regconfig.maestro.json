@@ -1,7 +1,7 @@
 {
   "core": {
     "workingDir": ".reg",
-    "actualDir": "${ACTUAL_DIR}",
+    "actualDir": ".maestro/screenshots",
     "thresholdRate": 0.001
   },
   "plugins": {
@@ -17,7 +17,7 @@
       "prComment": true,
       "prCommentBehavior": "default",
       "setCommitStatus": true,
-      "shortDescription": true
+      "shortDescription": false
     }
   }
 }

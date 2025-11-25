@@ -132,10 +132,9 @@ jobs:
 
           # reg-suit で比較
           rm -rf .reg
-          ACTUAL_DIR=.maestro/screenshots \
           EXPECTED_KEY=$EXPECTED_KEY \
           ACTUAL_KEY=$ACTUAL_KEY \
-          bunx reg-suit run
+          bunx reg-suit run -c regconfig.maestro.json
 
           # 比較結果の詳細を出力
           echo ""
@@ -331,10 +330,9 @@ jobs:
 
           # reg-suit で比較
           rm -rf .reg
-          ACTUAL_DIR=e2e/screenshots \
           EXPECTED_KEY=$EXPECTED_KEY \
           ACTUAL_KEY=$ACTUAL_KEY \
-          bunx reg-suit run
+          bunx reg-suit run -c regconfig.playwright.json
 
           # 比較結果の詳細を出力
           echo ""
