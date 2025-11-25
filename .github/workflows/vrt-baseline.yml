@@ -41,7 +41,7 @@ jobs:
           HASH=$(git rev-parse --short=7 HEAD)
           BRANCH="${{ github.ref_name }}"
           BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
-          VERSION=$(npx expo config --json | jq -r '.expo.version')
+          VERSION=$(npx expo config --json | jq -r '.version')
           FULL_KEY="$BRANCH_SAFE/$VERSION/$HASH/maestro"
           echo "🔍 Publishing Maestro baseline to GCS"
           echo "KEY: $FULL_KEY"
@@ -54,7 +54,7 @@ jobs:
         if: always()
         run: |
           HASH=$(git rev-parse --short=7 HEAD)
-          VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.expo.version')
+          VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.version')
           BRANCH="${{ github.ref_name }}"
           echo "## Maestro VRT Baseline Update" >> $GITHUB_STEP_SUMMARY
           echo "- Branch: $BRANCH" >> $GITHUB_STEP_SUMMARY
@@ -105,7 +105,7 @@ jobs:
           HASH=$(git rev-parse --short=7 HEAD)
           BRANCH="${{ github.ref_name }}"
           BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
-          VERSION=$(npx expo config --json | jq -r '.expo.version')
+          VERSION=$(npx expo config --json | jq -r '.version')
           FULL_KEY="$BRANCH_SAFE/$VERSION/$HASH/playwright"
           echo "🔍 Publishing Playwright baseline to GCS"
           echo "KEY: $FULL_KEY"
@@ -118,7 +118,7 @@ jobs:
         if: always()
         run: |
           HASH=$(git rev-parse --short=7 HEAD)
-          VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.expo.version')
+          VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.version')
           BRANCH="${{ github.ref_name }}"
           echo "## Playwright VRT Baseline Update" >> $GITHUB_STEP_SUMMARY
           echo "- Branch: $BRANCH" >> $GITHUB_STEP_SUMMARY

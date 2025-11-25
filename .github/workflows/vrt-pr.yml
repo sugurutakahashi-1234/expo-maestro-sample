@@ -108,7 +108,7 @@ jobs:
 
           # PR側（ACTUAL）の変数を構築
           PR_HASH=$(git rev-parse --short=7 HEAD)
-          PR_VERSION=$(npx expo config --json | jq -r '.expo.version')
+          PR_VERSION=$(npx expo config --json | jq -r '.version')
           PR_BRANCH="${{ github.head_ref }}"
           PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           ACTUAL_KEY="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH/maestro"
@@ -149,7 +149,7 @@ jobs:
         id: pages-path
         run: |
           PR_HASH=$(git rev-parse --short=7 HEAD)
-          PR_VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.expo.version')
+          PR_VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.version')
           PR_BRANCH="${{ github.head_ref }}"
           PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           PAGES_PATH="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH/maestro"
@@ -180,33 +180,30 @@ jobs:
         with:
           header: maestro-vrt-report
           message: |
-            ## 📊 Maestro VRT Report
-
-            ### 🌐 オンライン表示（GitHub Pages）
+            ## 🎼 Maestro VRT Report
 
             🔗 **View Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/
 
-            ⏱️ このレポートは **30日間保存** されます（その後自動削除）。
+            <details>
+            <summary>📋 詳細情報</summary>
 
-            ---
+            ### ⏱️ 保存期間
+            このレポートは **30日間保存** されます（その後自動削除）。
 
             ### 💻 ローカルでレポートを表示
-
-            **比較レポートをダウンロード:**
             ```bash
             cd apps/cool-app
             rm -rf .reg
             mkdir -p .reg
             gsutil -m cp -r "gs://vrt-sample/${{ steps.comparison-keys.outputs.actual-key }}" .reg
-            open .reg/${{ steps.comparison-keys.outputs.pr-hash }}/index.html
+            open .reg/maestro/index.html
             ```
 
-            ---
-
             ### 📊 比較情報
-
             - **Base**: `${{ steps.comparison-keys.outputs.expected-key }}`
             - **PR**: `${{ steps.comparison-keys.outputs.actual-key }}`
+
+            </details>
 
             ---
             *Powered by reg-suit + GitHub Pages*
@@ -312,7 +309,7 @@ jobs:
 
           # PR側（ACTUAL）
           PR_HASH=$(git rev-parse --short=7 HEAD)
-          PR_VERSION=$(npx expo config --json | jq -r '.expo.version')
+          PR_VERSION=$(npx expo config --json | jq -r '.version')
           PR_BRANCH="${{ github.head_ref }}"
           PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           ACTUAL_KEY="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH/playwright"
@@ -347,7 +344,7 @@ jobs:
         id: pages-path
         run: |
           PR_HASH=$(git rev-parse --short=7 HEAD)
-          PR_VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.expo.version')
+          PR_VERSION=$(cd apps/cool-app && npx expo config --json | jq -r '.version')
           PR_BRANCH="${{ github.head_ref }}"
           PR_BRANCH_SAFE=$(echo "$PR_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
           PAGES_PATH="$PR_BRANCH_SAFE/$PR_VERSION/$PR_HASH/playwright"
@@ -378,20 +375,30 @@ jobs:
         with:
           header: playwright-vrt-report
           message: |
-            ## 📊 Playwright VRT Report
-
-            ### 🌐 オンライン表示（GitHub Pages）
+            ## 🎭 Playwright VRT Report
 
             🔗 **View Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/
 
-            ⏱️ このレポートは **30日間保存** されます（その後自動削除）。
+            <details>
+            <summary>📋 詳細情報</summary>
 
-            ---
+            ### ⏱️ 保存期間
+            このレポートは **30日間保存** されます（その後自動削除）。
+
+            ### 💻 ローカルでレポートを表示
+            ```bash
+            cd apps/cool-app
+            rm -rf .reg
+            mkdir -p .reg
+            gsutil -m cp -r "gs://vrt-sample/${{ steps.comparison-keys.outputs.actual-key }}" .reg
+            open .reg/playwright/index.html
+            ```
 
             ### 📊 比較情報
-
             - **Base**: `${{ steps.comparison-keys.outputs.expected-key }}`
             - **PR**: `${{ steps.comparison-keys.outputs.actual-key }}`
+
+            </details>
 
             ---
             *Powered by reg-suit + Playwright + GitHub Pages*
