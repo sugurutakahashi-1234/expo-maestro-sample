@@ -410,13 +410,22 @@ jobs:
           echo "path=$PAGES_PATH" >> $GITHUB_OUTPUT
           echo "📍 GitHub Pages path: $PAGES_PATH"
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy VRT Report to GitHub Pages
         if: steps.check.outputs.should_run == 'true' && always()
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: apps/cool-app/.reg
           destination_dir: ${{ steps.pages-path.outputs.path }}
+          keep_files: true
+
+      - name: Deploy Playwright HTML Report to GitHub Pages
+        if: steps.check.outputs.should_run == 'true' && always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: apps/cool-app/playwright-report
+          destination_dir: ${{ steps.pages-path.outputs.path }}/html-report
           keep_files: true
 
       - name: Upload VRT report
@@ -428,6 +437,14 @@ jobs:
           retention-days: 30
           include-hidden-files: true
 
+      - name: Upload Playwright HTML report
+        if: steps.check.outputs.should_run == 'true' && always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-html-report
+          path: apps/cool-app/playwright-report/
+          retention-days: 30
+
       - name: Comment PR with VRT access methods
         if: steps.check.outputs.should_run == 'true' && always()
         uses: marocchino/sticky-pull-request-comment@v2
@@ -438,7 +455,9 @@ jobs:
 
             ${{ steps.comparison-keys.outputs.vrt-table }}
 
-            🔗 **View Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/
+            🔗 **View VRT Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/
+
+            📊 **View HTML Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/html-report/
 
             <details>
             <summary>📋 詳細情報</summary>
@@ -446,7 +465,7 @@ jobs:
             ### ⏱️ 保存期間
             このレポートは **30日間保存** されます（その後自動削除）。
 
-            ### 💻 ローカルでレポートを表示
+            ### 💻 ローカルでVRTレポートを表示
             ```bash
             cd apps/cool-app
             rm -rf .reg
