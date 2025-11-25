@@ -14,8 +14,8 @@
     },
     "reg-notify-github-plugin": {
       "clientId": "BcFRCsAgCADQE4U2tdFx/JA1tigyYcffexkrY6GTGeybI3U132sk1z5fgyoFSVDA44oVWx9t6u1O+SD+AQ==",
-      "prComment": true,
-      "prCommentBehavior": "new",
+      "prComment": false,
+      "prCommentBehavior": "default",
       "setCommitStatus": true,
       "shortDescription": false
     }

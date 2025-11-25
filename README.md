@@ -1023,10 +1023,16 @@ GitHub ActionsのPRイベントでは**detached HEAD状態**でチェックア�
       "actualKey": "${ACTUAL_KEY}"
     },
     "reg-publish-gcs-plugin": { "bucketName": "vrt-sample" },
-    "reg-notify-github-plugin": { "prComment": true, "setCommitStatus": true }
+    "reg-notify-github-plugin": { "prComment": false, "setCommitStatus": true }
   }
 }
 ```
+
+**`prComment: false` について**:
+reg-notify-github-plugin のPRコメント機能は無効化しています。理由は以下の通りです：
+- Maestro と Playwright で同じ regconfig.json を共有しているため、1つのコメントしか出力されない
+- 代わりに GitHub Actions の `marocchino/sticky-pull-request-comment` で独自のPRコメントを出力
+- これにより Maestro / Playwright それぞれ別のコメントでVRT結果を表示可能
 
 **環境変数の使い方**:
 
