@@ -63,6 +63,8 @@ app-example
 e2e/test-results/
 # Playwrightデフォルトのレポートディレクトリ
 playwright-report/
+# スクリーンショット（CI/CDで撮影、GCSでベースライン管理）
+e2e/screenshots/
 
 # GCP認証情報（絶対にコミットしない！）
 *-service-account-key.json
