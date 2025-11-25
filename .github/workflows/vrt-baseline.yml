@@ -46,9 +46,10 @@ jobs:
           echo "🔍 Publishing Maestro baseline to GCS"
           echo "KEY: $FULL_KEY"
           rm -rf .reg
+          ACTUAL_DIR=.maestro/screenshots \
           EXPECTED_KEY=$FULL_KEY \
           ACTUAL_KEY=$FULL_KEY \
-          bunx reg-suit run -c regconfig.maestro.json
+          bunx reg-suit run
 
       - name: Summary
         if: always()
@@ -110,9 +111,10 @@ jobs:
           echo "🔍 Publishing Playwright baseline to GCS"
           echo "KEY: $FULL_KEY"
           rm -rf .reg
+          ACTUAL_DIR=e2e/screenshots \
           EXPECTED_KEY=$FULL_KEY \
           ACTUAL_KEY=$FULL_KEY \
-          bunx reg-suit run -c regconfig.playwright.json
+          bunx reg-suit run
 
       - name: Summary
         if: always()

@@ -53,12 +53,16 @@ app-example
 .maestro/screenshots/.maestro/
 
 # VRT (Visual Regression Testing)
-.reg/                     # reg-suit作業ディレクトリ
-.maestro/screenshots-archive/       # VRTスクリーンショットアーカイブ履歴（GCS管理）
+# reg-suit作業ディレクトリ
+.reg/
+# VRTスクリーンショットアーカイブ履歴（GCS管理）
+.maestro/screenshots-archive/
 
 # Playwright
-e2e/test-results/                   # テスト結果（毎回生成）
-playwright-report/                  # Playwrightデフォルトのレポートディレクトリ
+# テスト結果（毎回生成）
+e2e/test-results/
+# Playwrightデフォルトのレポートディレクトリ
+playwright-report/
 
 # GCP認証情報（絶対にコミットしない！）
 *-service-account-key.json
