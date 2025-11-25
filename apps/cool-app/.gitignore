@@ -63,6 +63,8 @@ app-example
 e2e/test-results/
 # Playwrightデフォルトのレポートディレクトリ
 playwright-report/
+# JSONレポート（CI用、daun/playwright-report-summaryで使用）
+playwright-report.json
 # スクリーンショット（CI/CDで撮影、GCSでベースライン管理）
 e2e/screenshots/
 

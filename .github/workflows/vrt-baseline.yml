@@ -86,11 +86,13 @@ jobs:
 
       - name: Install Playwright browsers
         working-directory: apps/cool-app
-        run: bunx playwright install chromium --with-deps
+        # Chromium: Chrome/Edge系、WebKit: Safari系
+        # 4プロジェクト（chromium-desktop, webkit-desktop, iphone, pixel）で使用
+        run: bunx playwright install chromium webkit --with-deps
 
       - name: Run Playwright tests
         working-directory: apps/cool-app
-        run: bun run playwright:web
+        run: bun run playwright:headless
         env:
           CI: true
 

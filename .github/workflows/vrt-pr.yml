@@ -308,9 +308,16 @@ jobs:
       - name: Run Playwright tests
         if: steps.check.outputs.should_run == 'true'
         working-directory: apps/cool-app
-        run: bun run playwright:web
+        run: bun run playwright:headless
         env:
           CI: true
+
+      - name: Playwright Report Summary
+        if: always() && steps.check.outputs.should_run == 'true'
+        uses: daun/playwright-report-summary@v3
+        with:
+          report-file: apps/cool-app/playwright-report.json
+          comment-title: '🎭 Playwright Test Results'
 
       - name: Authenticate to Google Cloud
         if: steps.check.outputs.should_run == 'true'

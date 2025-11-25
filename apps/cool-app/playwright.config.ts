@@ -28,11 +28,33 @@ export default defineConfig({
   // CI環境では 1-2 を推奨
   retries: 0,
 
-  // テスト結果のレポート形式
-  // "html": ブラウザで見れるHTMLレポートを生成
-  // "list": コンソールに一覧表示
-  // "dot": 簡潔なドット表示
-  reporter: "html",
+  // ========================================
+  // レポーター設定
+  // ========================================
+  // 複数のレポーターを同時に使用可能
+  // 参考: https://playwright.dev/docs/test-reporters
+  reporter: [
+    // コンソール出力（実行中の進捗表示）
+    ["list"],
+    // HTMLレポート（ブラウザで詳細確認）
+    ["html"],
+    // JSONレポート（CI用、daun/playwright-report-summaryで使用）
+    ["json", { outputFile: "playwright-report.json" }],
+    // GitHub Actions Job Summary（CI環境のみ）
+    // https://github.com/estruyf/playwright-github-actions-reporter
+    ...(process.env.CI
+      ? [
+          [
+            "@estruyf/github-actions-reporter",
+            {
+              title: "Playwright Test Results",
+              useDetails: true,
+              showError: true,
+            },
+          ] as const,
+        ]
+      : []),
+  ],
 
   // ========================================
   // 全テスト共通の設定
