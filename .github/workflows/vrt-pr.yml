@@ -150,10 +150,23 @@ jobs:
           PASSED=$(jq '.passedItems | length' .reg/out.json)
           NEW=$(jq '.newItems | length' .reg/out.json)
           DELETED=$(jq '.deletedItems | length' .reg/out.json)
-          echo "vrt-changed=$CHANGED" >> $GITHUB_OUTPUT
-          echo "vrt-passed=$PASSED" >> $GITHUB_OUTPUT
-          echo "vrt-new=$NEW" >> $GITHUB_OUTPUT
-          echo "vrt-deleted=$DELETED" >> $GITHUB_OUTPUT
+
+          # テーブル行を動的に生成（0以外のみ）
+          VRT_TABLE="| Status | Count |
+          |--------|-------|"
+          [ "$CHANGED" -gt 0 ] && VRT_TABLE="$VRT_TABLE
+          | 🔴 Changed | $CHANGED |"
+          [ "$PASSED" -gt 0 ] && VRT_TABLE="$VRT_TABLE
+          | 🟢 Passed | $PASSED |"
+          [ "$NEW" -gt 0 ] && VRT_TABLE="$VRT_TABLE
+          | 🆕 New | $NEW |"
+          [ "$DELETED" -gt 0 ] && VRT_TABLE="$VRT_TABLE
+          | 🗑️ Deleted | $DELETED |"
+
+          # multiline output
+          echo "vrt-table<<EOF" >> $GITHUB_OUTPUT
+          echo "$VRT_TABLE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Set GitHub Pages path
         if: steps.check.outputs.should_run == 'true'
@@ -193,12 +206,7 @@ jobs:
           message: |
             ## 🎼 Maestro VRT Report
 
-            | Status | Count |
-            |--------|-------|
-            | 🔴 Changed | ${{ steps.comparison-keys.outputs.vrt-changed }} |
-            | 🟢 Passed | ${{ steps.comparison-keys.outputs.vrt-passed }} |
-            | 🆕 New | ${{ steps.comparison-keys.outputs.vrt-new }} |
-            | 🗑️ Deleted | ${{ steps.comparison-keys.outputs.vrt-deleted }} |
+            ${{ steps.comparison-keys.outputs.vrt-table }}
 
             🔗 **View Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/
 
@@ -363,10 +371,23 @@ jobs:
           PASSED=$(jq '.passedItems | length' .reg/out.json)
           NEW=$(jq '.newItems | length' .reg/out.json)
           DELETED=$(jq '.deletedItems | length' .reg/out.json)
-          echo "vrt-changed=$CHANGED" >> $GITHUB_OUTPUT
-          echo "vrt-passed=$PASSED" >> $GITHUB_OUTPUT
-          echo "vrt-new=$NEW" >> $GITHUB_OUTPUT
-          echo "vrt-deleted=$DELETED" >> $GITHUB_OUTPUT
+
+          # テーブル行を動的に生成（0以外のみ）
+          VRT_TABLE="| Status | Count |
+          |--------|-------|"
+          [ "$CHANGED" -gt 0 ] && VRT_TABLE="$VRT_TABLE
+          | 🔴 Changed | $CHANGED |"
+          [ "$PASSED" -gt 0 ] && VRT_TABLE="$VRT_TABLE
+          | 🟢 Passed | $PASSED |"
+          [ "$NEW" -gt 0 ] && VRT_TABLE="$VRT_TABLE
+          | 🆕 New | $NEW |"
+          [ "$DELETED" -gt 0 ] && VRT_TABLE="$VRT_TABLE
+          | 🗑️ Deleted | $DELETED |"
+
+          # multiline output
+          echo "vrt-table<<EOF" >> $GITHUB_OUTPUT
+          echo "$VRT_TABLE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Set GitHub Pages path
         if: steps.check.outputs.should_run == 'true'
@@ -406,12 +427,7 @@ jobs:
           message: |
             ## 🎭 Playwright VRT Report
 
-            | Status | Count |
-            |--------|-------|
-            | 🔴 Changed | ${{ steps.comparison-keys.outputs.vrt-changed }} |
-            | 🟢 Passed | ${{ steps.comparison-keys.outputs.vrt-passed }} |
-            | 🆕 New | ${{ steps.comparison-keys.outputs.vrt-new }} |
-            | 🗑️ Deleted | ${{ steps.comparison-keys.outputs.vrt-deleted }} |
+            ${{ steps.comparison-keys.outputs.vrt-table }}
 
             🔗 **View Report**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.pages-path.outputs.path }}/
 
