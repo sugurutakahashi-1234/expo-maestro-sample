@@ -1,7 +1,7 @@
 {
   "core": {
     "workingDir": ".reg",
-    "actualDir": ".maestro/screenshots",
+    "actualDir": "${ACTUAL_DIR}",
     "thresholdRate": 0.001
   },
   "plugins": {
@@ -14,10 +14,10 @@
     },
     "reg-notify-github-plugin": {
       "clientId": "BcFRCsAgCADQE4U2tdFx/JA1tigyYcffexkrY6GTGeybI3U132sk1z5fgyoFSVDA44oVWx9t6u1O+SD+AQ==",
-      "prComment": true,
+      "prComment": false,
       "prCommentBehavior": "default",
       "setCommitStatus": true,
-      "shortDescription": true
+      "shortDescription": false
     }
   }
 }

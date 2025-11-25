@@ -192,7 +192,7 @@ MaestroをCI/CDで安定して動かすには[Maestro Cloud](https://cloud.mobil
 
 以上の考察を踏まえ、本リポジトリでは以下のアプローチを採用：
 
-- **VRT実行**: ローカルで`vrt:compare:remote-branch`を使用
+- **VRT実行**: ローカルで`vrt:compare:remote-branch:maestro`（または`:playwright`）を使用
 - **CI/CD**: VRTはCI/CDに組み込まず、必要に応じてローカルで確認
 - **Maestroの用途**: 基本的な画面遷移の確認、レコーディングによる動作確認
 
@@ -549,6 +549,111 @@ adb shell am broadcast -a com.android.systemui.demo -e command notifications -e 
 
 ---
 
+## 3.3 Playwright（Web E2E）
+
+Expo WebアプリのE2Eテスト用にPlaywrightを使用しています。
+
+### クイックスタート
+
+```bash
+cd apps/cool-app
+
+# 初回セットアップ
+bun run playwright:setup   # ディレクトリ作成
+bun run playwright:install # Chromiumインストール
+
+# テスト実行（Webサーバー自動起動）
+bun run playwright:web
+```
+
+### コマンド一覧
+
+| コマンド | 説明 | 用途 |
+|---------|------|------|
+| `playwright:setup` | スクリーンショット用ディレクトリ作成 | 初回のみ |
+| `playwright:install` | Chromiumブラウザをインストール | 初回・CI環境 |
+| `playwright:web` | テスト実行（ヘッドレス） | 通常のテスト実行 |
+| `playwright:web:headed` | テスト実行（ブラウザ表示） | 動作確認・デバッグ |
+| `playwright:web:ui` | UIモードでテスト実行 | テスト開発・デバッグ |
+
+### Maestroとの比較
+
+| 項目 | Maestro | Playwright |
+|------|---------|------------|
+| 対象 | iOS/Android（モバイル） | Web（ブラウザ） |
+| 設定形式 | YAML | TypeScript |
+| テストファイル | `.maestro/app-flow.yaml` | `e2e/*.spec.ts` |
+| スクリーンショット | `.maestro/screenshots/{ios,android}/` | `e2e/screenshots/web/` |
+| VRTコマンド | `vrt:compare:remote-branch:maestro` | `vrt:compare:remote-branch:playwright` |
+| CI/CD実行 | シミュレータ/エミュレータ必要 | ヘッドレスブラウザで簡単 |
+| 実行速度 | 遅め | 高速 |
+
+### ディレクトリ構成
+
+```
+apps/cool-app/
+├── .maestro/                    # Maestro（モバイル）
+│   ├── app-flow.yaml
+│   └── screenshots/{ios,android}/
+├── e2e/                         # Playwright（Web）
+│   ├── home.spec.ts            # テストファイル
+│   └── screenshots/web/         # VRT用スクリーンショット
+└── playwright.config.ts         # Playwright設定
+```
+
+### playwright.config.ts の主要設定
+
+```typescript
+export default defineConfig({
+  testDir: "./e2e",              // テストファイルの場所
+  outputDir: "./e2e/test-results", // テスト結果出力先
+
+  webServer: {
+    command: "bun run web",      // Expo Web起動
+    url: "http://localhost:8081",
+    reuseExistingServer: !process.env.CI, // ローカル: 既存サーバー再利用
+    timeout: 120 * 1000,         // Expo起動待ち（2分）
+  },
+
+  projects: [{
+    name: "web",
+    use: {
+      viewport: { width: 1280, height: 720 }, // VRT用固定サイズ
+    },
+  }],
+});
+```
+
+### VRT実行
+
+```bash
+# テスト実行（スクリーンショット取得）
+bun run playwright:web
+
+# mainブランチと比較
+bun run vrt:compare:remote-branch:playwright
+```
+
+**注意**: リモートブランチに`e2e/screenshots/`がコミットされている必要があります。
+
+### GitHub Actions（CI/CD）
+
+PlaywrightもCI/CDで自動実行されます。
+
+| ワークフロー | 説明 |
+|-------------|------|
+| `vrt-pr.yml` | PR作成時にPlaywrightテストを実行し、mainブランチと比較 |
+| `vrt-baseline.yml` | mainマージ時に新ベースラインをGCSに保存 |
+
+**特徴**:
+- CI環境でPlaywrightテストを実行し、スクリーンショットを自動生成
+- Maestro（モバイル）と並列で実行されるため、CI時間への影響は最小限
+- ヘッドレスブラウザで安定した結果を得やすい
+
+詳細は「4.2 リモートVRT」を参照。
+
+---
+
 ## 4. VRT（Visual Regression Testing）
 
 ### 4.1 VRTの3つの課題
@@ -574,16 +679,33 @@ CI/CDで自動実行し、PRでレポートを確認する方式。
 | 項目 | 設定値 |
 |------|--------|
 | ツール | reg-suit + Google Cloud Storage |
+| 対象 | Maestro（モバイル）+ Playwright（Web）の両方 |
 | 実行タイミング | PR作成時、mainマージ時 |
 | レポート | GitHub Pages（本リポジトリ） |
 
 #### CI/CDワークフロー
 
-| ワークフロー | トリガー | 説明 |
-|-------------|---------|------|
-| `vrt-pr.yml` | PR作成・更新時 | ベースブランチと比較、PRコメント投稿 |
-| `vrt-baseline.yml` | mainマージ時 | 新ベースラインをGCSに保存 |
-| `cleanup-vrt-reports.yml` | 毎週日曜 | 30日以上前のレポートを削除 |
+| ワークフロー | トリガー | Maestro | Playwright |
+|-------------|---------|---------|------------|
+| `vrt-pr.yml` | PR作成・更新時 | mainと比較、PRコメント | mainと比較、PRコメント |
+| `vrt-baseline.yml` | mainマージ時 | GCSに保存 | GCSに保存 |
+| `cleanup-vrt-reports.yml` | 毎週日曜 | レポート削除 | レポート削除 |
+
+**ジョブ構成**:
+- `maestro-vrt` / `maestro-baseline`: モバイルスクリーンショット（`.maestro/screenshots/`）
+- `playwright-vrt` / `playwright-baseline`: Webスクリーンショット（`e2e/screenshots/`）
+- 両ジョブは**並列実行**されるため、CI時間は増加しない
+
+#### GCSパス構造
+
+```
+gs://vrt-sample/
+└── {branch}/{version}/{hash}/
+    ├── maestro/      # Maestro（モバイル）
+    └── playwright/   # Playwright（Web）
+```
+
+**例**: `main/1.0.0/abc1234/maestro`, `main/1.0.0/abc1234/playwright`
 
 #### ホスティング選択肢と課題
 
@@ -611,21 +733,38 @@ CI/CDで自動実行し、PRでレポートを確認する方式。
 
 | コマンド | 比較対象 | アーカイブ管理 | 推奨度 |
 |---------|---------|--------------|--------|
-| **vrt:compare:remote-branch** | 現在 vs Gitリモートブランチ | **不要** | ★★★ |
+| **vrt:compare:remote-branch:maestro** | 現在 vs Gitリモートブランチ（モバイル） | **不要** | ★★★ |
+| **vrt:compare:remote-branch:playwright** | 現在 vs Gitリモートブランチ（Web） | **不要** | ★★★ |
 | vrt:compare:local:current | 現在 vs ローカルアーカイブ | 必要 | ★★☆ |
 | vrt:compare:local:archived | アーカイブ vs アーカイブ | 必要 | ★☆☆ |
 
-**推奨**: `vrt:compare:remote-branch` が最もシンプル
+**推奨**: `vrt:compare:remote-branch:*` が最もシンプル
 
 ```bash
-# 最もシンプルなパターン
+# Maestro（モバイル）
 bun run maestro:ios
-bun run vrt:compare:remote-branch
-# → mainブランチのスクリーンショットと自動比較（GCS/S3不要）
+bun run vrt:compare:remote-branch:maestro
+# → デフォルトブランチ（main）と自動比較
+
+# Playwright（Web）
+bun run playwright:web
+bun run vrt:compare:remote-branch:playwright
+# → デフォルトブランチ（main）と自動比較
+
+# ブランチを指定する場合
+bun run vrt:compare:remote-branch:maestro -- --branch feature/xxx
+bun run vrt:compare:remote-branch:playwright -- --branch develop
+```
+
+**直接実行**（より柔軟）:
+```bash
+bun run scripts/vrt-compare-remote-branch.ts --mode maestro
+bun run scripts/vrt-compare-remote-branch.ts --mode maestro --branch feature/xxx
+bun run scripts/vrt-compare-remote-branch.ts --mode playwright --branch main
 ```
 
 **重要**:
-- `vrt:compare:remote-branch`は**Gitリポジトリのリモートブランチ**から直接スクリーンショットを取得
+- `vrt:compare:remote-branch:*`は**Gitリポジトリのリモートブランチ**から直接スクリーンショットを取得
 - **GCS/S3などのクラウドストレージは一切使用しない**
 - 追加コスト、セキュリティリスク、インフラ管理の複雑性を完全に回避
 
@@ -696,7 +835,7 @@ bun run vrt:compare:remote-branch
 - mainブランチにスクリーンショットがpushされていれば即比較可能
 - キャッシュ機能で2回目以降は高速
 
-**結論**: 基本的には `vrt:compare:remote-branch` を使う
+**結論**: 基本的には `vrt:compare:remote-branch:maestro` / `vrt:compare:remote-branch:playwright` を使う
 
 ---
 
@@ -875,13 +1014,38 @@ GitHub ActionsのPRイベントでは**detached HEAD状態**でチェックア�
 {
   "core": {
     "workingDir": ".reg",
-    "actualDir": ".maestro/screenshots",
+    "actualDir": "${ACTUAL_DIR}",  // 環境変数で切り替え
     "thresholdRate": 0.001  // 差分閾値 0.1%
   },
   "plugins": {
-    "reg-simple-keygen-plugin": { ... },
+    "reg-simple-keygen-plugin": {
+      "expectedKey": "${EXPECTED_KEY}",
+      "actualKey": "${ACTUAL_KEY}"
+    },
     "reg-publish-gcs-plugin": { "bucketName": "vrt-sample" },
-    "reg-notify-github-plugin": { "prComment": true, "setCommitStatus": true }
+    "reg-notify-github-plugin": { "prComment": false, "setCommitStatus": true }
   }
 }
+```
+
+**`prComment: false` について**:
+reg-notify-github-plugin のPRコメント機能は無効化しています。理由は以下の通りです：
+- Maestro と Playwright で同じ regconfig.json を共有しているため、1つのコメントしか出力されない
+- 代わりに GitHub Actions の `marocchino/sticky-pull-request-comment` で独自のPRコメントを出力
+- これにより Maestro / Playwright それぞれ別のコメントでVRT結果を表示可能
+
+**環境変数の使い方**:
+
+```bash
+# Maestro（モバイル）
+ACTUAL_DIR=.maestro/screenshots \
+EXPECTED_KEY=main/1.0.0/abc1234/maestro \
+ACTUAL_KEY=feature/1.0.0/def5678/maestro \
+bunx reg-suit run
+
+# Playwright（Web）
+ACTUAL_DIR=e2e/screenshots \
+EXPECTED_KEY=main/1.0.0/abc1234/playwright \
+ACTUAL_KEY=feature/1.0.0/def5678/playwright \
+bunx reg-suit run
 ```

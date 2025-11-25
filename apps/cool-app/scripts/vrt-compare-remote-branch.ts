@@ -4,16 +4,67 @@ import { existsSync } from "fs";
 // ========================================
 // 定数定義
 // ========================================
-const SCREENSHOTS_DIR = ".maestro/screenshots"; // 現在のスクリーンショットディレクトリ
 const REMOTE_SCREENSHOTS_BASE_DIR = ".reg/remote"; // リモートブランチのスクリーンショット保存先
 const THRESHOLD = 0.001; // 画像比較の閾値（0.1%）
 
-// コマンドライン引数を取得
-const args = process.argv.slice(2);
+// モード定義
+const MODES = {
+  maestro: ".maestro/screenshots",
+  playwright: "e2e/screenshots",
+} as const;
+
+type Mode = keyof typeof MODES;
 
 // ========================================
 // ヘルパー関数
 // ========================================
+
+/**
+ * コマンドライン引数を解析
+ * --mode <maestro|playwright> : モード指定（必須）
+ * --branch <branch-name>      : ブランチ指定（省略時はデフォルトブランチ）
+ */
+function parseArgs(args: string[]): { mode: Mode; branch?: string } {
+  let mode: Mode | undefined;
+  let branch: string | undefined;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--mode" && args[i + 1]) {
+      const value = args[i + 1];
+      if (value in MODES) {
+        mode = value as Mode;
+      } else {
+        console.error(`❌ Invalid mode: ${value}`);
+        console.error(`💡 Available modes: ${Object.keys(MODES).join(", ")}`);
+        process.exit(1);
+      }
+      i++;
+    } else if (args[i] === "--branch" && args[i + 1]) {
+      branch = args[i + 1];
+      i++;
+    }
+  }
+
+  if (!mode) {
+    console.error("Usage: bun run scripts/vrt-compare-remote-branch.ts --mode <mode> [--branch <branch>]");
+    console.error("");
+    console.error("Options:");
+    console.error("  --mode <mode>      Mode: maestro or playwright (required)");
+    console.error("  --branch <branch>  Target branch (optional, defaults to repository default)");
+    console.error("");
+    console.error("Examples:");
+    console.error("  bun run scripts/vrt-compare-remote-branch.ts --mode maestro");
+    console.error("  bun run scripts/vrt-compare-remote-branch.ts --mode maestro --branch feature/new-ui");
+    console.error("  bun run scripts/vrt-compare-remote-branch.ts --mode playwright --branch main");
+    console.error("");
+    console.error("npm scripts:");
+    console.error("  bun run vrt:compare:remote-branch:maestro");
+    console.error("  bun run vrt:compare:remote-branch:playwright");
+    process.exit(1);
+  }
+
+  return { mode, branch };
+}
 
 /**
  * リポジトリのデフォルトブランチを取得
@@ -33,16 +84,17 @@ async function getDefaultBranch(): Promise<string> {
 
 /**
  * リモートブランチのスクリーンショット保存ディレクトリパスを生成
- * アーカイブと同じ構造: .reg/remote/<branch>/<version>/<hash>
+ * GCS / GitHub Pages と同じ構造: .reg/remote/<branch>/<version>/<hash>/<mode>
  */
 function getRemoteScreenshotsDir(
   branch: string,
   version: string,
-  hash: string
+  hash: string,
+  mode: Mode
 ): string {
   // ブランチ名を正規化（特殊文字をアンダースコアに変換）
   const normalizedBranch = branch.replace(/[^a-zA-Z0-9._-]/g, "_");
-  return `${REMOTE_SCREENSHOTS_BASE_DIR}/${normalizedBranch}/${version}/${hash}`;
+  return `${REMOTE_SCREENSHOTS_BASE_DIR}/${normalizedBranch}/${version}/${hash}/${mode}`;
 }
 
 // ========================================
@@ -51,36 +103,31 @@ function getRemoteScreenshotsDir(
 (async () => {
   try {
     // ========================================
-    // ステップ1: 比較対象のブランチを決定
+    // ステップ1: 引数を解析
     // ========================================
-    // - 引数なし: リポジトリのデフォルトブランチを使用
-    // - 引数あり: 指定されたブランチを使用
+    const args = process.argv.slice(2);
+    const { mode, branch } = parseArgs(args);
+
+    const screenshotsDir = MODES[mode];
     let targetBranch: string;
 
-    if (args.length === 0) {
-      targetBranch = await getDefaultBranch();
-      console.log(`📌 Using repository's default branch: ${targetBranch}`);
-    } else if (args.length === 1) {
-      targetBranch = args[0];
+    console.log(`🎯 Mode: ${mode}`);
+    console.log(`📂 Screenshots directory: ${screenshotsDir}`);
+
+    if (branch) {
+      targetBranch = branch;
       console.log(`📌 Using specified branch: ${targetBranch}`);
     } else {
-      console.error("Usage: bun run vrt:compare:remote [branch]");
-      console.error("Example: bun run vrt:compare:remote");
-      console.error("Example: bun run vrt:compare:remote feature/some-branch");
-      console.error("");
-      console.error("This compares:");
-      console.error("  - Actual: .maestro/screenshots (current development)");
-      console.error("  - Expected: Remote branch's .maestro/screenshots");
-      process.exit(1);
+      targetBranch = await getDefaultBranch();
+      console.log(`📌 Using repository's default branch: ${targetBranch}`);
     }
 
     // ========================================
     // ステップ2: 現在のスクリーンショットディレクトリの存在確認
     // ========================================
-    // Maestroで取得したスクリーンショットが存在しない場合はエラー
-    if (!existsSync(SCREENSHOTS_DIR)) {
-      console.error(`❌ Screenshots directory not found: ${SCREENSHOTS_DIR}`);
-      console.error("💡 Run 'bun run maestro:ios' or 'bun run maestro:android' first");
+    if (!existsSync(screenshotsDir)) {
+      console.error(`❌ Screenshots directory not found: ${screenshotsDir}`);
+      console.error("💡 Run the appropriate test command first to generate screenshots");
       process.exit(1);
     }
 
@@ -121,13 +168,14 @@ function getRemoteScreenshotsDir(
     // ========================================
     // ステップ5: リモートスクリーンショット保存先を決定
     // ========================================
-    // .reg/remote/<branch>/<version>/<hash> の形式でディレクトリパスを生成
+    // .reg/remote/<branch>/<version>/<hash>/<mode> の形式でディレクトリパスを生成
     const remoteScreenshotsDir = getRemoteScreenshotsDir(
       targetBranch,
       version,
-      remoteHash
+      remoteHash,
+      mode
     );
-    const extractedPath = `${remoteScreenshotsDir}/${SCREENSHOTS_DIR}`;
+    const extractedPath = `${remoteScreenshotsDir}/${screenshotsDir}`;
 
     // 既に抽出済みの場合はスキップ
     if (existsSync(extractedPath)) {
@@ -141,7 +189,7 @@ function getRemoteScreenshotsDir(
       // ========================================
       // ステップ6: リモートブランチからスクリーンショットを抽出
       // ========================================
-      // git archive でリモートブランチの .maestro/screenshots を展開
+      // git archive でリモートブランチのスクリーンショットを展開
       console.log(`\n📦 Extracting screenshots from origin/${targetBranch}`);
       console.log(`Save to: ${remoteScreenshotsDir}`);
 
@@ -149,9 +197,9 @@ function getRemoteScreenshotsDir(
         // ディレクトリを作成
         await $`mkdir -p ${remoteScreenshotsDir}`;
 
-        // git archive でリモートブランチの .maestro/screenshots を抽出
+        // git archive でリモートブランチのスクリーンショットを抽出
         // パイプを使ってアーカイブを直接展開
-        await $`git archive origin/${targetBranch} ${SCREENSHOTS_DIR} | tar -x -C ${remoteScreenshotsDir}`;
+        await $`git archive origin/${targetBranch} ${screenshotsDir} | tar -x -C ${remoteScreenshotsDir}`;
 
         // 抽出されたスクリーンショットの存在確認
         if (!existsSync(extractedPath)) {
@@ -159,7 +207,7 @@ function getRemoteScreenshotsDir(
             `❌ Screenshots not found in remote branch: ${targetBranch}`
           );
           console.error(
-            `💡 Make sure ${SCREENSHOTS_DIR} exists in the remote branch`
+            `💡 Make sure ${screenshotsDir} exists in the remote branch`
           );
           process.exit(1);
         }
@@ -183,7 +231,7 @@ function getRemoteScreenshotsDir(
     const reportJson = `${remoteScreenshotsDir}/reg.json`;
 
     console.log("\n📊 Running VRT comparison...");
-    console.log(`Actual (current): ${SCREENSHOTS_DIR}`);
+    console.log(`Actual (current): ${screenshotsDir}`);
     console.log(`Expected (${targetBranch}@${remoteHash}): ${extractedPath}`);
     console.log(`Results: ${remoteScreenshotsDir}`);
     console.log("");
@@ -192,7 +240,7 @@ function getRemoteScreenshotsDir(
     await $`mkdir -p ${diffDir}`;
 
     // 実行するコマンドを表示
-    const command = `bunx reg-cli ${SCREENSHOTS_DIR} ${extractedPath} ${diffDir} -R ${reportHtml} -J ${reportJson} -T ${THRESHOLD}`;
+    const command = `bunx reg-cli ${screenshotsDir} ${extractedPath} ${diffDir} -R ${reportHtml} -J ${reportJson} -T ${THRESHOLD}`;
     console.log("🔧 Executing command:");
     console.log(command);
     console.log("");
@@ -200,7 +248,7 @@ function getRemoteScreenshotsDir(
     // reg-cli を実行
     // 注: reg-cli は差分が見つかった場合に非0で終了するため、try-catchで処理
     try {
-      await $`bunx reg-cli ${SCREENSHOTS_DIR} ${extractedPath} ${diffDir} -R ${reportHtml} -J ${reportJson} -T ${THRESHOLD}`;
+      await $`bunx reg-cli ${screenshotsDir} ${extractedPath} ${diffDir} -R ${reportHtml} -J ${reportJson} -T ${THRESHOLD}`;
       console.log("✅ No differences detected");
     } catch {
       console.log("⚠️  Differences detected");

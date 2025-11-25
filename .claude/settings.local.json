@@ -72,7 +72,11 @@
       "Bash(git show-ref:*)",
       "Bash(git symbolic-ref:*)",
       "Bash(aapt dump badging:*)",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "Bash(bunx playwright install:*)",
+      "Bash(bunx playwright test:*)",
+      "Bash(bunx playwright:*)",
+      "Bash(bunx reg-suit:*)"
     ],
     "deny": [],
     "ask": []
