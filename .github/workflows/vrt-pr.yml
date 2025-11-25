@@ -229,10 +229,10 @@ jobs:
             - **Base**: `${{ steps.comparison-keys.outputs.expected-key }}`
             - **PR**: `${{ steps.comparison-keys.outputs.actual-key }}`
 
-            </details>
-
             ---
             *Powered by reg-suit + GitHub Pages*
+
+            </details>
 
       - name: Summary
         if: steps.check.outputs.should_run == 'true' && always()
@@ -450,10 +450,10 @@ jobs:
             - **Base**: `${{ steps.comparison-keys.outputs.expected-key }}`
             - **PR**: `${{ steps.comparison-keys.outputs.actual-key }}`
 
-            </details>
-
             ---
             *Powered by reg-suit + Playwright + GitHub Pages*
+
+            </details>
 
       - name: Summary
         if: steps.check.outputs.should_run == 'true' && always()
