@@ -1,0 +1,1 @@
+cd apps/cool-app && bun run playwright:e2e:snapshot:check

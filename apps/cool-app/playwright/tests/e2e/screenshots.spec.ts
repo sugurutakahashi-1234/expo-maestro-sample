@@ -68,6 +68,10 @@ test.describe("E2E スクリーンショットテスト", () => {
     await page.screenshot({
       path: `playwright/screenshots/${testInfo.project.name}/home-tab.png`,
     });
+    // Playwright snapshot（並行運用）
+    await expect(page).toHaveScreenshot(`${testInfo.project.name}-home-tab.png`, {
+      maxDiffPixelRatio: 0.001, // reg-cliと同等の閾値（0.1%）
+    });
 
     // ========================================
     // 2. 記事詳細画面のスクリーンショット撮影
@@ -87,6 +91,10 @@ test.describe("E2E スクリーンショットテスト", () => {
     // 4. スクリーンショットを撮影
     await page.screenshot({
       path: `playwright/screenshots/${testInfo.project.name}/article-detail.png`,
+    });
+    // Playwright snapshot（並行運用）
+    await expect(page).toHaveScreenshot(`${testInfo.project.name}-article-detail.png`, {
+      maxDiffPixelRatio: 0.001, // reg-cliと同等の閾値（0.1%）
     });
 
     // ========================================
@@ -119,6 +127,10 @@ test.describe("E2E スクリーンショットテスト", () => {
     await page.screenshot({
       path: `playwright/screenshots/${testInfo.project.name}/transition-tab.png`,
     });
+    // Playwright snapshot（並行運用）
+    await expect(page).toHaveScreenshot(`${testInfo.project.name}-transition-tab.png`, {
+      maxDiffPixelRatio: 0.001, // reg-cliと同等の閾値（0.1%）
+    });
 
     // ========================================
     // 4. このアプリについてタブのスクリーンショット撮影
@@ -137,6 +149,10 @@ test.describe("E2E スクリーンショットテスト", () => {
     await page.screenshot({
       path: `playwright/screenshots/${testInfo.project.name}/about-tab.png`,
     });
+    // Playwright snapshot（並行運用）
+    await expect(page).toHaveScreenshot(`${testInfo.project.name}-about-tab.png`, {
+      maxDiffPixelRatio: 0.001, // reg-cliと同等の閾値（0.1%）
+    });
 
     // ========================================
     // 5. プロフィールタブのスクリーンショット撮影
@@ -154,6 +170,10 @@ test.describe("E2E スクリーンショットテスト", () => {
     // 4. スクリーンショットを撮影
     await page.screenshot({
       path: `playwright/screenshots/${testInfo.project.name}/profile-tab.png`,
+    });
+    // Playwright snapshot（並行運用）
+    await expect(page).toHaveScreenshot(`${testInfo.project.name}-profile-tab.png`, {
+      maxDiffPixelRatio: 0.001, // reg-cliと同等の閾値（0.1%）
     });
 
     // ========================================
@@ -204,6 +224,10 @@ test.describe("E2E スクリーンショットテスト", () => {
     // 6. スクリーンショットを撮影
     await page.screenshot({
       path: `playwright/screenshots/${testInfo.project.name}/login-form-filled.png`,
+    });
+    // Playwright snapshot（並行運用）
+    await expect(page).toHaveScreenshot(`${testInfo.project.name}-login-form-filled.png`, {
+      maxDiffPixelRatio: 0.001, // reg-cliと同等の閾値（0.1%）
     });
 
     // ========================================
@@ -259,6 +283,10 @@ test.describe("E2E スクリーンショットテスト", () => {
     // 6. スクリーンショットを撮影
     await page.screenshot({
       path: `playwright/screenshots/${testInfo.project.name}/help-modal.png`,
+    });
+    // Playwright snapshot（並行運用）
+    await expect(page).toHaveScreenshot(`${testInfo.project.name}-help-modal.png`, {
+      maxDiffPixelRatio: 0.001, // reg-cliと同等の閾値（0.1%）
     });
 
     // ========================================

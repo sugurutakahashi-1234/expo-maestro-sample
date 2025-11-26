@@ -719,6 +719,36 @@ bun run vrt:compare:remote-branch:playwright
 
 **注意**: リモートブランチに`playwright/screenshots/`がコミットされている必要があります。
 
+### toHaveScreenshot（チーム共有VRT）
+
+Playwright組み込みの `toHaveScreenshot()` をチーム共有で運用。
+
+| 用途 | ツール | 備考 |
+|------|--------|------|
+| チームVRT（CI） | `vrt:compare:remote-branch:playwright` (reg-cli) | Git管理、CI対応 |
+| チームVRT（pre-push） | `playwright:e2e:snapshot:check` (toHaveScreenshot) | Git管理、ローカル実行 |
+
+**運用フロー**:
+1. ベースライン更新: `bun run playwright:e2e:snapshot:update` → コミット
+2. push時: husky pre-push で自動チェック
+3. 差分があればpush失敗 → 確認後、ベースライン更新 or コード修正
+
+**コマンド**:
+```bash
+# ベースライン作成/更新
+bun run playwright:e2e:snapshot:update
+
+# 手動で差分チェック
+bun run playwright:e2e:snapshot:check
+
+# HTMLレポートで差分確認
+bunx playwright show-report
+```
+
+**注意**: 全員macOSで統一されていることが前提（ファイル名に `-darwin.png` が含まれるため）。異なるOSの開発者がいる場合は `.gitignore` でスナップショットを除外し、ローカル専用で運用。
+
+**補足（CI専用運用）**: reg-cli を使わない場合は、GitHub Actions + Artifact でCI専用のベースラインを管理する方法もある。OSが統一される（Linux）ため、プラットフォーム差異問題が解消される。
+
 ### GitHub Actions（CI/CD）
 
 PlaywrightもCI/CDで自動実行されます。

@@ -76,7 +76,8 @@
       "Bash(bunx playwright install:*)",
       "Bash(bunx playwright test:*)",
       "Bash(bunx playwright:*)",
-      "Bash(bunx reg-suit:*)"
+      "Bash(bunx reg-suit:*)",
+      "Bash(bunx husky init:*)"
     ],
     "deny": [],
     "ask": []

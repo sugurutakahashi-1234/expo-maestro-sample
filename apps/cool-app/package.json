@@ -20,6 +20,8 @@
     "playwright:headless": "bunx playwright test",
     "playwright:e2e": "bunx playwright test playwright/tests/e2e",
     "playwright:e2e:record": "PLAYWRIGHT_VIDEO=on bunx playwright test playwright/tests/e2e",
+    "playwright:e2e:snapshot:update": "bunx playwright test playwright/tests/e2e --update-snapshots",
+    "playwright:e2e:snapshot:check": "bunx playwright test playwright/tests/e2e",
     "playwright:headed": "bunx playwright test --headed",
     "playwright:ui": "bunx playwright test --ui",
     "playwright:debug": "bunx playwright test --debug",
