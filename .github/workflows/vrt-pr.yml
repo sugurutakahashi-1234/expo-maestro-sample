@@ -395,7 +395,7 @@ jobs:
 
           # reg-suit で比較
           rm -rf .reg
-          ACTUAL_DIR=e2e/screenshots \
+          ACTUAL_DIR=playwright/screenshots \
           EXPECTED_KEY=$EXPECTED_KEY \
           ACTUAL_KEY=$ACTUAL_KEY \
           bunx reg-suit run

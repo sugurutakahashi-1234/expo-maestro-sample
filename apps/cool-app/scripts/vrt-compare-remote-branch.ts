@@ -10,7 +10,7 @@ const THRESHOLD = 0.001; // 画像比較の閾値（0.1%）
 // モード定義
 const MODES = {
   maestro: ".maestro/screenshots",
-  playwright: "e2e/screenshots",
+  playwright: "playwright/screenshots",
 } as const;
 
 type Mode = keyof typeof MODES;

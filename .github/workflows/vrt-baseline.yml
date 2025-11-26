@@ -111,7 +111,7 @@ jobs:
           echo "🔍 Publishing Playwright baseline to GCS"
           echo "KEY: $FULL_KEY"
           rm -rf .reg
-          ACTUAL_DIR=e2e/screenshots \
+          ACTUAL_DIR=playwright/screenshots \
           EXPECTED_KEY=$FULL_KEY \
           ACTUAL_KEY=$FULL_KEY \
           bunx reg-suit run

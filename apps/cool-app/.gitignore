@@ -59,14 +59,16 @@ app-example
 .maestro/screenshots-archive/
 
 # Playwright
+# テスト設計書（Plannerが生成、メンテナンス困難なため管理外）
+playwright/specs/
 # テスト結果（毎回生成）
-e2e/test-results/
+playwright/test-results/
 # Playwrightデフォルトのレポートディレクトリ
 playwright-report/
 # JSONレポート（CI用、daun/playwright-report-summaryで使用）
 playwright-report.json
 # スクリーンショット（CI/CDで撮影、GCSでベースライン管理）
-e2e/screenshots/
+playwright/screenshots/
 
 # GCP認証情報（絶対にコミットしない！）
 *-service-account-key.json
