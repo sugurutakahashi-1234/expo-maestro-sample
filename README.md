@@ -582,8 +582,8 @@ bun run playwright:web
 |------|---------|------------|
 | 対象 | iOS/Android（モバイル） | Web（ブラウザ） |
 | 設定形式 | YAML | TypeScript |
-| テストファイル | `.maestro/app-flow.yaml` | `e2e/*.spec.ts` |
-| スクリーンショット | `.maestro/screenshots/{ios,android}/` | `e2e/screenshots/web/` |
+| テストファイル | `.maestro/app-flow.yaml` | `playwright/tests/*.spec.ts` |
+| スクリーンショット | `.maestro/screenshots/{ios,android}/` | `playwright/screenshots/` |
 | VRTコマンド | `vrt:compare:remote-branch:maestro` | `vrt:compare:remote-branch:playwright` |
 | CI/CD実行 | シミュレータ/エミュレータ必要 | ヘッドレスブラウザで簡単 |
 | 実行速度 | 遅め | 高速 |
@@ -595,32 +595,115 @@ apps/cool-app/
 ├── .maestro/                    # Maestro（モバイル）
 │   ├── app-flow.yaml
 │   └── screenshots/{ios,android}/
-├── e2e/                         # Playwright（Web）
-│   ├── home.spec.ts            # テストファイル
-│   └── screenshots/web/         # VRT用スクリーンショット
+├── playwright/                  # Playwright（Web）
+│   ├── specs/                   # Planner生成（.gitignore対象）
+│   ├── tests/
+│   │   ├── seed.spec.ts         # エージェント用エントリーポイント
+│   │   ├── home/                # ホーム画面テスト（8テスト）
+│   │   │   ├── initial-display.spec.ts (2)
+│   │   │   ├── article-navigation.spec.ts (2)
+│   │   │   ├── tab-navigation.spec.ts (2)
+│   │   │   └── edge-cases.spec.ts (2)
+│   │   └── e2e/
+│   │       └── screenshots.spec.ts  # VRT用スクリーンショット
+│   └── screenshots/             # VRT用スクリーンショット
+│       ├── desktop-chrome/
+│       ├── desktop-safari/
+│       ├── iphone-safari/
+│       └── pixel-chrome/
 └── playwright.config.ts         # Playwright設定
 ```
+
+### Playwright Test Agents
+
+AIエージェントを使用してテストを作成・修正します。
+
+**公式ドキュメント**: https://playwright.dev/docs/test-agents
+
+#### エージェント一覧
+
+| エージェント | 用途 | 運用 |
+|------------|------|------|
+| **Planner** | テスト設計書（specs/*.md）を生成 | ⚠️ メンテナンス困難 |
+| **Generator** | 設計書からテストコードを生成 | ✅ 推奨 |
+| **Healer** | 失敗テストを自動修正 | ✅ 推奨 |
+
+#### Claude Code での使い方
+
+Claude Code では `@` マークでエージェントを呼び出せます：
+
+| 呼び出し方 | 用途 |
+|-----------|------|
+| `@agent-playwright-test-planner` | テスト設計書を生成 |
+| `@agent-playwright-test-generator` | テストコードを生成 |
+| `@agent-playwright-test-healer` | 失敗テストを修正 |
+
+**使用例**:
+
+```
+# 新しい画面のテスト設計書を作成
+@agent-playwright-test-planner About画面のテスト設計書を作成して
+
+# テストコードを生成
+@agent-playwright-test-generator About画面のテストを作成して
+
+# 失敗したテストを修正
+@agent-playwright-test-healer article-navigation.spec.ts が失敗している
+```
+
+**注意**:
+- エージェント定義ファイルは `.claude/agents/` に配置されています
+- Planner の出力（`playwright/specs/`）は `.gitignore` 対象です
+
+#### Planner の運用注意点
+
+**Planner はメンテナンスが難しいため、設計書（specs/）は git 管理しない。**
+
+理由:
+- アプリの変更に追従するメンテナンスが困難
+- 生成時に使い捨てとして利用するのが現実的
+- `playwright/specs/` は `.gitignore` に追加済み
+
+#### 推奨ワークフロー
+
+```
+# 新しい画面のテスト作成（網羅的）
+1. Planner → specs/about.md（一時的）
+2. Generator → tests/about/*.spec.ts
+3. テスト実行 → 失敗なら Healer
+
+# 簡易的なテスト追加
+「About画面のテスト追加して」→ Generator 直接
+
+# テスト修正
+「article-navigation.spec.ts が失敗」→ Healer
+```
+
+#### seed.spec.ts について
+
+- エージェントの参照ポイントとして使用
+- 認証が必要なアプリはここでログイン処理を記述
+- テストのスタイルガイドとしても機能
 
 ### playwright.config.ts の主要設定
 
 ```typescript
 export default defineConfig({
-  testDir: "./e2e",              // テストファイルの場所
-  outputDir: "./e2e/test-results", // テスト結果出力先
+  testDir: "./playwright/tests",   // テストファイルの場所
+  outputDir: "./playwright/test-results", // テスト結果出力先
 
   webServer: {
     command: "bun run web",      // Expo Web起動
     url: "http://localhost:8081",
     reuseExistingServer: !process.env.CI, // ローカル: 既存サーバー再利用
-    timeout: 120 * 1000,         // Expo起動待ち（2分）
   },
 
-  projects: [{
-    name: "web",
-    use: {
-      viewport: { width: 1280, height: 720 }, // VRT用固定サイズ
-    },
-  }],
+  projects: [
+    { name: "desktop-chrome", use: { ...devices["Desktop Chrome"] } },
+    { name: "desktop-safari", use: { ...devices["Desktop Safari"] } },
+    { name: "iphone-safari", use: { ...devices["iPhone 15"] } },
+    { name: "pixel-chrome", use: { ...devices["Pixel 7"] } },
+  ],
 });
 ```
 
@@ -634,7 +717,7 @@ bun run playwright:web
 bun run vrt:compare:remote-branch:playwright
 ```
 
-**注意**: リモートブランチに`e2e/screenshots/`がコミットされている必要があります。
+**注意**: リモートブランチに`playwright/screenshots/`がコミットされている必要があります。
 
 ### GitHub Actions（CI/CD）
 

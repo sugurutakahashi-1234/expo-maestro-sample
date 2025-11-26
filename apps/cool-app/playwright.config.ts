@@ -11,10 +11,10 @@ export default defineConfig({
   // テストファイルの場所
   // ========================================
   // テストファイル（*.spec.ts）を探すディレクトリ
-  testDir: "./e2e",
+  testDir: "./playwright/tests",
 
   // テスト結果（スクリーンショット、動画など）の出力先
-  outputDir: "./e2e/test-results",
+  outputDir: "./playwright/test-results",
 
   // ========================================
   // テスト実行オプション
@@ -69,6 +69,11 @@ export default defineConfig({
     // "off": 記録しない
     // "retain-on-failure": 失敗時のみ保持（推奨）
     trace: "retain-on-failure",
+
+    // 動画記録: 環境変数で制御（デフォルト off）
+    // PLAYWRIGHT_VIDEO=on で有効化
+    // 保存先: playwright/test-results/{テスト名}/video.webm
+    video: process.env.PLAYWRIGHT_VIDEO === "on" ? "on" : "off",
   },
 
   // ========================================
@@ -83,13 +88,13 @@ export default defineConfig({
     // Chromium（Chrome/Edge系）- 世界シェア約65%
     // プリセット設定: viewport 1280×720, isMobile: false, hasTouch: false
     {
-      name: "chromium-desktop",
+      name: "desktop-chrome",
       use: { ...devices["Desktop Chrome"] },
     },
     // WebKit（Safari）- macOS/iOS標準ブラウザ
     // プリセット設定: viewport 1280×720, isMobile: false, hasTouch: false
     {
-      name: "webkit-desktop",
+      name: "desktop-safari",
       use: { ...devices["Desktop Safari"] },
     },
 
@@ -101,7 +106,7 @@ export default defineConfig({
     // isMobile: true（メタビューポートタグ適用）, hasTouch: true
     // defaultBrowserType: "webkit"（Safari Mobile エンジン）
     {
-      name: "iphone",
+      name: "iphone-safari",
       use: { ...devices["iPhone 15"] },
     },
     // Pixel 7 - Playwrightで利用可能な最新Pixel（2025年時点）
@@ -109,7 +114,7 @@ export default defineConfig({
     // isMobile: true, hasTouch: true
     // defaultBrowserType: "chromium"（Chrome Mobile エンジン）
     {
-      name: "pixel",
+      name: "pixel-chrome",
       use: { ...devices["Pixel 7"] },
     },
   ],
