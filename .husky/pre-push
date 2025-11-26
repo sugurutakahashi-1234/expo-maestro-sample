@@ -1,1 +1,24 @@
-cd apps/cool-app && bun run playwright:e2e:snapshot:check
+#!/bin/sh
+
+echo ""
+echo "🔍 [pre-push] Playwright スナップショットチェックを実行中..."
+echo ""
+
+cd apps/cool-app
+
+if bun run playwright:e2e:snapshot:check; then
+  echo ""
+  echo "✅ [pre-push] スナップショットチェック成功！pushを続行します。"
+  echo ""
+else
+  echo ""
+  echo "❌ [pre-push] スナップショットチェック失敗！"
+  echo ""
+  echo "📋 対処方法:"
+  echo "  1. 差分を確認:  cd apps/cool-app && bun run playwright:report"
+  echo "  2. 意図した変更の場合: bun run playwright:e2e:snapshot:update でベースライン更新"
+  echo "  3. バグの場合: コードを修正"
+  echo "  4. 緊急時: git push --no-verify でスキップ可能"
+  echo ""
+  exit 1
+fi

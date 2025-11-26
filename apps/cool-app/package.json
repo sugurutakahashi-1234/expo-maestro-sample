@@ -25,7 +25,7 @@
     "playwright:headed": "bunx playwright test --headed",
     "playwright:ui": "bunx playwright test --ui",
     "playwright:debug": "bunx playwright test --debug",
-    "playwright:report": "bunx playwright show-report",
+    "playwright:report": "pkill -f 'playwright show-report' 2>/dev/null; bunx playwright show-report",
     "playwright:install": "bunx playwright install chromium webkit",
     "vrt:archive:local": "bun run scripts/vrt-archive-screenshots.ts",
     "vrt:archive:local:force": "bun run scripts/vrt-archive-screenshots.ts --force",
