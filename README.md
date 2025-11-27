@@ -719,35 +719,73 @@ bun run vrt:compare:remote-branch:playwright
 
 **注意**: リモートブランチに`playwright/screenshots/`がコミットされている必要があります。
 
-### toHaveScreenshot（チーム共有VRT）
+### Playwright E2E VRT（Visual Regression Testing）
 
-Playwright組み込みの `toHaveScreenshot()` をチーム共有で運用。
+Playwright E2Eテストには2種類のVRTが設定されている。
 
-| 用途 | ツール | 備考 |
-|------|--------|------|
-| チームVRT（CI） | `vrt:compare:remote-branch:playwright` (reg-cli) | Git管理、CI対応 |
-| チームVRT（pre-push） | `playwright:e2e:snapshot:check` (toHaveScreenshot) | Git管理、ローカル実行 |
+#### VRT構成
 
-**運用フロー**:
-1. ベースライン更新: `bun run playwright:e2e:snapshot:update` → コミット
-2. push時: husky pre-push で自動チェック
-3. 差分があればpush失敗 → 確認後、ベースライン更新 or コード修正
+| VRT | ツール | 実行タイミング | 役割 |
+|-----|--------|---------------|------|
+| ローカルVRT | toHaveScreenshot | husky pre-push | 事前差分チェック（push前に検知） |
+| CI VRT | reg-cli | GitHub Actions | 最終差分チェック（PR時に担保） |
 
-**コマンド**:
+**二重管理について**: 本リポジトリは検証目的のため両方を設定しているが、本番運用では片方で十分。
+- **シンプルに始めたい場合**: ローカルVRT（toHaveScreenshot + husky）のみ
+- **CI重視の場合**: CI VRT（reg-cli + GitHub Actions）のみ
+
+#### husky運用のメリット
+
+Playwright内蔵の `toHaveScreenshot()` を husky pre-push で運用することで：
+- **GitHub Actions の Artifact 設定不要**: ローカルでベースラインをGit管理
+- **push前に差分を検知**: CIを待たずに即座にフィードバック
+- **全員macOSならプラットフォーム差異なし**: `-darwin.png` で統一
+
+#### コマンド一覧
+
+| コマンド | 用途 |
+|---------|------|
+| `playwright:e2e` | E2Eテスト実行（toHaveScreenshotチェック含む） |
+| `playwright:e2e:video` | 動画記録付きでE2Eテスト実行 |
+| `playwright:e2e:snapshot-update` | ベースライン更新 |
+| `playwright:headless` | 全テスト実行（ヘッドレス） |
+| `playwright:headed` | 全テスト実行（ブラウザ表示） |
+| `playwright:ui` | Playwright UI モードで実行 |
+| `playwright:debug` | デバッグモードで実行 |
+| `playwright:report` | HTMLレポート表示 |
+
+#### 運用フロー
+
+```
+1. 開発中
+   └─ UIを変更
+
+2. push前（自動）
+   └─ husky pre-push → bun run playwright:e2e
+      ├─ 差分なし → push成功
+      └─ 差分あり → push失敗
+         ├─ 意図した変更 → bun run playwright:e2e:snapshot-update → 再コミット
+         └─ バグ → コード修正
+
+3. PR時（CI）
+   └─ GitHub Actions → reg-cli で最終チェック
+```
+
+#### ベースライン更新
+
 ```bash
-# ベースライン作成/更新
-bun run playwright:e2e:snapshot:update
+# UIを変更した場合
+bun run playwright:e2e:snapshot-update
 
-# 手動で差分チェック
-bun run playwright:e2e:snapshot:check
+# 差分を確認
+mise run playwright-report
 
-# HTMLレポートで差分確認
-bunx playwright show-report
+# コミット
+git add .
+git commit -m "chore: update playwright snapshots"
 ```
 
 **注意**: 全員macOSで統一されていることが前提（ファイル名に `-darwin.png` が含まれるため）。異なるOSの開発者がいる場合は `.gitignore` でスナップショットを除外し、ローカル専用で運用。
-
-**補足（CI専用運用）**: reg-cli を使わない場合は、GitHub Actions + Artifact でCI専用のベースラインを管理する方法もある。OSが統一される（Linux）ため、プラットフォーム差異問題が解消される。
 
 ### GitHub Actions（CI/CD）
 
