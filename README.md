@@ -693,7 +693,12 @@ export default defineConfig({
   outputDir: "./playwright/test-results", // テスト結果出力先
 
   webServer: {
-    command: "bun run web",      // Expo Web起動
+    // Expo Web（production モード）
+    // --no-dev オプションにより:
+    // - Expo DevMenu ボタン（雷アイコン）が非表示
+    // - 開発時の警告（pointerEvents deprecated など）が非表示
+    // - より本番環境に近い状態でテスト実行
+    command: "bun run web:test",
     url: "http://localhost:8081",
     reuseExistingServer: !process.env.CI, // ローカル: 既存サーバー再利用
   },
@@ -706,6 +711,12 @@ export default defineConfig({
   ],
 });
 ```
+
+**`web:test` vs `web` の違い**:
+| スクリプト | コマンド | DevMenu | 用途 |
+|-----------|---------|---------|------|
+| `web` | `expo start --web` | 表示 | 開発時 |
+| `web:test` | `expo start --web --no-dev` | 非表示 | テスト時 |
 
 ### VRT実行
 
@@ -1174,7 +1185,7 @@ GitHub ActionsのPRイベントでは**detached HEAD状態**でチェックア�
       "actualKey": "${ACTUAL_KEY}"
     },
     "reg-publish-gcs-plugin": { "bucketName": "vrt-sample" },
-    "reg-notify-github-plugin": { "prComment": false, "setCommitStatus": true }
+    "reg-notify-github-plugin": { "prComment": false, "setCommitStatus": false }
   }
 }
 ```
@@ -1184,6 +1195,13 @@ reg-notify-github-plugin のPRコメント機能は無効化しています。�
 - Maestro と Playwright で同じ regconfig.json を共有しているため、1つのコメントしか出力されない
 - 代わりに GitHub Actions の `marocchino/sticky-pull-request-comment` で独自のPRコメントを出力
 - これにより Maestro / Playwright それぞれ別のコメントでVRT結果を表示可能
+
+**`setCommitStatus: false` について**:
+reg-notify-github-plugin の commit status 機能は無効化しています。理由は以下の通りです：
+- VRTで差分が検出されると「Regression testing failed」として ❌ マークが表示される
+- しかし、VRTの差分は「失敗」ではなく「レビューが必要」という意味
+- GitHub Actions のジョブ自体は成功しているのに ❌ が表示されると混乱を招く
+- VRTの結果はPRコメントで確認できるため、commit status は不要
 
 **環境変数の使い方**:
 
