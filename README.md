@@ -693,7 +693,12 @@ export default defineConfig({
   outputDir: "./playwright/test-results", // テスト結果出力先
 
   webServer: {
-    command: "bun run web",      // Expo Web起動
+    // Expo Web（production モード）
+    // --no-dev オプションにより:
+    // - Expo DevMenu ボタン（雷アイコン）が非表示
+    // - 開発時の警告（pointerEvents deprecated など）が非表示
+    // - より本番環境に近い状態でテスト実行
+    command: "bun run web:test",
     url: "http://localhost:8081",
     reuseExistingServer: !process.env.CI, // ローカル: 既存サーバー再利用
   },
@@ -707,6 +712,12 @@ export default defineConfig({
 });
 ```
 
+**`web:test` vs `web` の違い**:
+| スクリプト | コマンド | DevMenu | 用途 |
+|-----------|---------|---------|------|
+| `web` | `expo start --web` | 表示 | 開発時 |
+| `web:test` | `expo start --web --no-dev` | 非表示 | テスト時 |
+
 ### VRT実行
 
 ```bash
@@ -718,6 +729,74 @@ bun run vrt:compare:remote-branch:playwright
 ```
 
 **注意**: リモートブランチに`playwright/screenshots/`がコミットされている必要があります。
+
+### Playwright E2E VRT（Visual Regression Testing）
+
+Playwright E2Eテストには2種類のVRTが設定されている。
+
+#### VRT構成
+
+| VRT | ツール | 実行タイミング | 役割 |
+|-----|--------|---------------|------|
+| ローカルVRT | toHaveScreenshot | husky pre-push | 事前差分チェック（push前に検知） |
+| CI VRT | reg-cli | GitHub Actions | 最終差分チェック（PR時に担保） |
+
+**二重管理について**: 本リポジトリは検証目的のため両方を設定しているが、本番運用では片方で十分。
+- **シンプルに始めたい場合**: ローカルVRT（toHaveScreenshot + husky）のみ
+- **CI重視の場合**: CI VRT（reg-cli + GitHub Actions）のみ
+
+#### husky運用のメリット
+
+Playwright内蔵の `toHaveScreenshot()` を husky pre-push で運用することで：
+- **GitHub Actions の Artifact 設定不要**: ローカルでベースラインをGit管理
+- **push前に差分を検知**: CIを待たずに即座にフィードバック
+- **全員macOSならプラットフォーム差異なし**: `-darwin.png` で統一
+
+#### コマンド一覧
+
+| コマンド | 用途 |
+|---------|------|
+| `playwright:e2e` | E2Eテスト実行（toHaveScreenshotチェック含む） |
+| `playwright:e2e:video` | 動画記録付きでE2Eテスト実行 |
+| `playwright:e2e:snapshot-update` | ベースライン更新 |
+| `playwright` | 全テスト実行（ヘッドレス） |
+| `playwright:headed` | 全テスト実行（ブラウザ表示） |
+| `playwright:ui` | Playwright UI モードで実行 |
+| `playwright:debug` | デバッグモードで実行 |
+| `playwright:report` | HTMLレポート表示 |
+
+#### 運用フロー
+
+```
+1. 開発中
+   └─ UIを変更
+
+2. push前（自動）
+   └─ husky pre-push → bun run playwright:e2e
+      ├─ 差分なし → push成功
+      └─ 差分あり → push失敗
+         ├─ 意図した変更 → bun run playwright:e2e:snapshot-update → 再コミット
+         └─ バグ → コード修正
+
+3. PR時（CI）
+   └─ GitHub Actions → reg-cli で最終チェック
+```
+
+#### ベースライン更新
+
+```bash
+# UIを変更した場合
+bun run playwright:e2e:snapshot-update
+
+# 差分を確認
+mise run playwright-report
+
+# コミット
+git add .
+git commit -m "chore: update playwright snapshots"
+```
+
+**注意**: 全員macOSで統一されていることが前提（ファイル名に `-darwin.png` が含まれるため）。異なるOSの開発者がいる場合は `.gitignore` でスナップショットを除外し、ローカル専用で運用。
 
 ### GitHub Actions（CI/CD）
 
@@ -1106,7 +1185,7 @@ GitHub ActionsのPRイベントでは**detached HEAD状態**でチェックア�
       "actualKey": "${ACTUAL_KEY}"
     },
     "reg-publish-gcs-plugin": { "bucketName": "vrt-sample" },
-    "reg-notify-github-plugin": { "prComment": false, "setCommitStatus": true }
+    "reg-notify-github-plugin": { "prComment": false, "setCommitStatus": false }
   }
 }
 ```
@@ -1116,6 +1195,13 @@ reg-notify-github-plugin のPRコメント機能は無効化しています。�
 - Maestro と Playwright で同じ regconfig.json を共有しているため、1つのコメントしか出力されない
 - 代わりに GitHub Actions の `marocchino/sticky-pull-request-comment` で独自のPRコメントを出力
 - これにより Maestro / Playwright それぞれ別のコメントでVRT結果を表示可能
+
+**`setCommitStatus: false` について**:
+reg-notify-github-plugin の commit status 機能は無効化しています。理由は以下の通りです：
+- VRTで差分が検出されると「Regression testing failed」として ❌ マークが表示される
+- しかし、VRTの差分は「失敗」ではなく「レビューが必要」という意味
+- GitHub Actions のジョブ自体は成功しているのに ❌ が表示されると混乱を招く
+- VRTの結果はPRコメントで確認できるため、commit status は不要
 
 **環境変数の使い方**:
 

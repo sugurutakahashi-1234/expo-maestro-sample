@@ -3,7 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "workspaces": {
-    "packages": ["apps/*", "packages/*"],
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
     "catalog": {
       "react": "19.1.0",
       "react-dom": "19.1.0",
@@ -18,11 +21,15 @@
     "typecheck": "bun run --filter '*' typecheck",
     "format": "bun run --filter '*' format",
     "clean": "bun run --filter '*' clean && rm -rf node_modules",
-    "ci": "bun run typecheck && bun run lint && bun run test"
+    "ci": "bun run typecheck && bun run lint && bun run test",
+    "prepare": "husky"
   },
   "resolutions": {
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }

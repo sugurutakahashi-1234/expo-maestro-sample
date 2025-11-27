@@ -124,8 +124,12 @@ export default defineConfig({
   // ========================================
   // テスト実行前に自動でサーバーを起動
   webServer: {
-    // サーバー起動コマンド（Expo Web）
-    command: "bun run web",
+    // サーバー起動コマンド（Expo Web - production モード）
+    // --no-dev オプションにより:
+    // - Expo DevMenu ボタン（雷アイコン）が非表示
+    // - 開発時の警告（pointerEvents deprecated など）が非表示
+    // - より本番環境に近い状態でテスト実行
+    command: "bun run web:test",
 
     // サーバーの準備完了を確認するURL
     url: "http://localhost:8081",

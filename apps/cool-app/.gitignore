@@ -61,6 +61,12 @@ app-example
 # Playwright
 # テスト設計書（Plannerが生成、メンテナンス困難なため管理外）
 playwright/specs/
+# スナップショット（toHaveScreenshot用）
+# Git管理: チーム全体でベースラインを共有
+# 前提: 全員macOS（プラットフォーム統一）
+# チェック: husky pre-push で自動実行
+# ※ファイル名に -darwin.png が含まれるため、異なるOSの開発者がいる場合は除外を推奨
+# playwright/tests/**/*-snapshots/
 # テスト結果（毎回生成）
 playwright/test-results/
 # Playwrightデフォルトのレポートディレクトリ

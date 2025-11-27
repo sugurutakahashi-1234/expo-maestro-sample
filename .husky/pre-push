@@ -1,0 +1,24 @@
+#!/bin/sh
+
+echo "" >&2
+echo "🔍 [pre-push] Playwright テストを実行中..." >&2
+echo "" >&2
+
+cd apps/cool-app
+
+if bun run playwright; then
+  echo "" >&2
+  echo "✅ [pre-push] Playwright テスト成功！pushを続行します。" >&2
+  echo "" >&2
+else
+  echo "" >&2
+  echo "❌ [pre-push] Playwright テスト失敗！" >&2
+  echo "" >&2
+  echo "📋 対処方法:" >&2
+  echo "  1. 差分を確認:  mise run playwright-report" >&2
+  echo "  2. 意図した変更の場合: bun run playwright:e2e:snapshot-update でベースライン更新" >&2
+  echo "  3. バグの場合: コードを修正" >&2
+  echo "  4. 緊急時: git push --no-verify でスキップ可能" >&2
+  echo "" >&2
+  exit 1
+fi

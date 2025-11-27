@@ -3,3 +3,8 @@ java = "temurin-21"
 maestro = "latest"
 bun = "latest"
 node = "latest"
+
+[tasks.playwright-report]
+run = "bun run playwright:report"
+dir = "apps/cool-app"
+description = "Playwrightレポートを表示"
