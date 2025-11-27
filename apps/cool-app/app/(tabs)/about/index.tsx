@@ -103,10 +103,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.1)",
     elevation: 2,
   },
   techLabel: {
@@ -146,10 +143,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#8b5cf6",
     borderRadius: 12,
     alignItems: "center",
-    shadowColor: "#8b5cf6",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    boxShadow: "0px 2px 4px rgba(139, 92, 246, 0.3)",
     elevation: 4,
   },
   buttonText: {

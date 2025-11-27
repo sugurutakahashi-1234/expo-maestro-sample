@@ -4,29 +4,6 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("E2E スクリーンショットテスト", () => {
-  // Expo開発メニューボタン（雷アイコン）を非表示にする
-  const hideExpoDevMenu = async (page: import("@playwright/test").Page) => {
-    // JavaScriptで左下固定のボタン要素を削除
-    await page.evaluate(() => {
-      // 全ての固定位置要素をチェック
-      const allElements = document.querySelectorAll("*");
-      allElements.forEach((el) => {
-        const style = window.getComputedStyle(el);
-        const rect = el.getBoundingClientRect();
-        // 左下隅の固定要素（DevMenuボタン）を非表示
-        if (
-          style.position === "fixed" &&
-          rect.bottom > window.innerHeight - 100 &&
-          rect.left < 100 &&
-          rect.width < 80 &&
-          rect.height < 80
-        ) {
-          (el as HTMLElement).style.display = "none";
-        }
-      });
-    });
-  };
-
   test("すべての画面のスクリーンショットを撮影", async ({ page }, testInfo) => {
     // ========================================
     // タイムアウト設定
@@ -51,9 +28,6 @@ test.describe("E2E スクリーンショットテスト", () => {
 
     // 1. ブラウザで `/` にアクセス
     await page.goto("/");
-
-    // Expo DevMenuボタンを非表示
-    await hideExpoDevMenu(page);
 
     // 2. ページの読み込みを待機（`domcontentloaded`）
     await page.waitForLoadState("domcontentloaded");
@@ -277,7 +251,6 @@ test.describe("E2E スクリーンショットテスト", () => {
 
     // 1. ホーム画面に戻る（ログイン画面にはタブがないので直接ナビゲート）
     await page.goto("/");
-    await hideExpoDevMenu(page);
     await page.waitForLoadState("domcontentloaded");
 
     // 2. 最上部までスクロール

@@ -326,7 +326,7 @@ jobs:
       - name: Run Playwright tests
         if: steps.check.outputs.should_run == 'true'
         working-directory: apps/cool-app
-        run: bun run playwright:headless
+        run: bun run playwright
         env:
           CI: true
 

@@ -90,7 +90,7 @@ jobs:
 
       - name: Run Playwright tests
         working-directory: apps/cool-app
-        run: bun run playwright:headless
+        run: bun run playwright
         env:
           CI: true
 

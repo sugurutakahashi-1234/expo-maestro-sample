@@ -748,7 +748,7 @@ Playwright内蔵の `toHaveScreenshot()` を husky pre-push で運用するこ�
 | `playwright:e2e` | E2Eテスト実行（toHaveScreenshotチェック含む） |
 | `playwright:e2e:video` | 動画記録付きでE2Eテスト実行 |
 | `playwright:e2e:snapshot-update` | ベースライン更新 |
-| `playwright:headless` | 全テスト実行（ヘッドレス） |
+| `playwright` | 全テスト実行（ヘッドレス） |
 | `playwright:headed` | 全テスト実行（ブラウザ表示） |
 | `playwright:ui` | Playwright UI モードで実行 |
 | `playwright:debug` | デバッグモードで実行 |

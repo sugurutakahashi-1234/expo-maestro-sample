@@ -1,18 +1,18 @@
 #!/bin/sh
 
 echo "" >&2
-echo "🔍 [pre-push] Playwright スナップショットチェックを実行中..." >&2
+echo "🔍 [pre-push] Playwright テストを実行中..." >&2
 echo "" >&2
 
 cd apps/cool-app
 
-if bun run playwright:e2e; then
+if bun run playwright; then
   echo "" >&2
-  echo "✅ [pre-push] スナップショットチェック成功！pushを続行します。" >&2
+  echo "✅ [pre-push] Playwright テスト成功！pushを続行します。" >&2
   echo "" >&2
 else
   echo "" >&2
-  echo "❌ [pre-push] スナップショットチェック失敗！" >&2
+  echo "❌ [pre-push] Playwright テスト失敗！" >&2
   echo "" >&2
   echo "📋 対処方法:" >&2
   echo "  1. 差分を確認:  mise run playwright-report" >&2
